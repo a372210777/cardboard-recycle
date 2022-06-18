@@ -16,6 +16,7 @@
 package cn.com.qjun.cardboard.service.dto;
 
 import cn.com.qjun.cardboard.common.SystemConstant;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import java.util.List;
 import me.zhengjie.annotation.Query;
@@ -29,13 +30,16 @@ import me.zhengjie.annotation.Query;
 public class BasicBuyerQueryCriteria{
 
     /** 模糊 */
+    @ApiModelProperty(value = "采购商名称，模糊查询")
     @Query(type = Query.Type.INNER_LIKE)
     private String name;
 
     /** 精确 */
     @Query
+    @ApiModelProperty(value = "机构代码，精确查询")
     private String institutionCode;
 
     @Query
+    @ApiModelProperty(value = "是否已删除", hidden = true)
     private Integer deleted = SystemConstant.DEL_FLAG_0;
 }

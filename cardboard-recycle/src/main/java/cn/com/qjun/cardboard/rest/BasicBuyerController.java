@@ -15,7 +15,6 @@
 */
 package cn.com.qjun.cardboard.rest;
 
-import cn.com.qjun.cardboard.common.SystemConstant;
 import me.zhengjie.annotation.Log;
 import cn.com.qjun.cardboard.domain.BasicBuyer;
 import cn.com.qjun.cardboard.service.BasicBuyerService;
