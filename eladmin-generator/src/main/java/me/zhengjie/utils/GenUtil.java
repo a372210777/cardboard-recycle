@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Copyright 2019-2020 Zheng Jie
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -276,7 +276,7 @@ public class GenUtil {
             // 主键存在字典
             if (StringUtils.isNotBlank(column.getDictName())) {
                 genMap.put("hasDict", true);
-                if(!dicts.contains(column.getDictName()))
+                if (!dicts.contains(column.getDictName()))
                     dicts.add(column.getDictName());
             }
 
