@@ -1,3 +1,4 @@
+
 #配置数据源
 spring:
   datasource:
@@ -122,3 +123,5 @@ file:
   # 文件大小 /M
   maxSize: 100
   avatarMaxSize: 5
+server:
+  port: 13383
