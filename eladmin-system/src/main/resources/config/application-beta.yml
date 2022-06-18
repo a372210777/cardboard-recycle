@@ -5,9 +5,9 @@ spring:
     druid:
       db-type: com.alibaba.druid.pool.DruidDataSource
       driverClassName: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      url: jdbc:log4jdbc:mysql://beta.qjun.com.cn:13306/cardboard_recycle?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false
-      username: root
-      password: u|!L[7k+]oDR)>yd
+      url: jdbc:log4jdbc:mysql://nas.qjun.com.cn:3307/cardboard_recycle?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false
+      username: qjun_dev
+      password: uF2)e@i5mO
       # 初始连接数
       initial-size: 5
       # 最小连接数
