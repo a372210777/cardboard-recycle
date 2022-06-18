@@ -15,6 +15,7 @@
 */
 package cn.com.qjun.cardboard.service.impl;
 
+import cn.com.qjun.cardboard.common.SystemConstant;
 import cn.com.qjun.cardboard.domain.BasicMaterial;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
@@ -30,12 +31,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import me.zhengjie.utils.PageUtil;
 import me.zhengjie.utils.QueryHelp;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 /**
 * @website https://el-admin.vip
@@ -72,6 +71,7 @@ public class BasicMaterialServiceImpl implements BasicMaterialService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public BasicMaterialDto create(BasicMaterial resources) {
+        resources.setDeleted(SystemConstant.DEL_FLAG_0);
         return basicMaterialMapper.toDto(basicMaterialRepository.save(resources));
     }
 
@@ -86,9 +86,11 @@ public class BasicMaterialServiceImpl implements BasicMaterialService {
 
     @Override
     public void deleteAll(Integer[] ids) {
-        for (Integer id : ids) {
-            basicMaterialRepository.deleteById(id);
+        List<BasicMaterial> allById = basicMaterialRepository.findAllById(Arrays.asList(ids));
+        for (BasicMaterial basicMaterial : allById) {
+            basicMaterial.setDeleted(SystemConstant.DEL_FLAG_1);
         }
+        basicMaterialRepository.saveAll(allById);
     }
 
     @Override

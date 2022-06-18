@@ -15,7 +15,6 @@
  */
 package cn.com.qjun.cardboard.domain;
 
-import lombok.Data;
 import cn.hutool.core.bean.BeanUtil;
 import io.swagger.annotations.ApiModelProperty;
 import cn.hutool.core.bean.copier.CopyOptions;
