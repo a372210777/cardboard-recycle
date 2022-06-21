@@ -15,20 +15,14 @@
 */
 package cn.com.qjun.cardboard.rest;
 
+import cn.com.qjun.cardboard.utils.SerialNumberGenerator;
 import me.zhengjie.annotation.Log;
-import cn.com.qjun.cardboard.domain.QualityCheckCert;
-import cn.com.qjun.cardboard.service.QualityCheckCertService;
-import cn.com.qjun.cardboard.service.dto.QualityCheckCertQueryCriteria;
-import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.annotations.*;
-import java.io.IOException;
-import javax.servlet.http.HttpServletResponse;
 
 /**
 * @website https://el-admin.vip
@@ -41,47 +35,13 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("/api/qualityCheckCert")
 public class QualityCheckCertController {
 
-    private final QualityCheckCertService qualityCheckCertService;
+    private final SerialNumberGenerator serialNumberGenerator;
 
-    @Log("导出数据")
-    @ApiOperation("导出数据")
-    @GetMapping(value = "/download")
-    @PreAuthorize("@el.check('qualityCheckCert:list')")
-    public void exportQualityCheckCert(HttpServletResponse response, QualityCheckCertQueryCriteria criteria) throws IOException {
-        qualityCheckCertService.download(qualityCheckCertService.queryAll(criteria), response);
-    }
-
-    @GetMapping
-    @Log("查询质检单")
-    @ApiOperation("查询质检单")
-    @PreAuthorize("@el.check('qualityCheckCert:list')")
-    public ResponseEntity<Object> queryQualityCheckCert(QualityCheckCertQueryCriteria criteria, Pageable pageable){
-        return new ResponseEntity<>(qualityCheckCertService.queryAll(criteria,pageable),HttpStatus.OK);
-    }
-
-    @PostMapping
-    @Log("新增质检单")
-    @ApiOperation("新增质检单")
-    @PreAuthorize("@el.check('qualityCheckCert:add')")
-    public ResponseEntity<Object> createQualityCheckCert(@Validated @RequestBody QualityCheckCert resources){
-        return new ResponseEntity<>(qualityCheckCertService.create(resources),HttpStatus.CREATED);
-    }
-
-    @PutMapping
-    @Log("修改质检单")
-    @ApiOperation("修改质检单")
-    @PreAuthorize("@el.check('qualityCheckCert:edit')")
-    public ResponseEntity<Object> updateQualityCheckCert(@Validated @RequestBody QualityCheckCert resources){
-        qualityCheckCertService.update(resources);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-
-    @DeleteMapping
-    @Log("删除质检单")
-    @ApiOperation("删除质检单")
-    @PreAuthorize("@el.check('qualityCheckCert:del')")
-    public ResponseEntity<Object> deleteQualityCheckCert(@RequestBody String[] ids) {
-        qualityCheckCertService.deleteAll(ids);
-        return new ResponseEntity<>(HttpStatus.OK);
+    @GetMapping("/genId")
+    @Log("生成质检单号")
+    @ApiOperation("生成质检单号")
+    @PreAuthorize("@el.check('stockOutOrder:add')")
+    public ResponseEntity<String> generateOrderId() {
+        return new ResponseEntity<>(serialNumberGenerator.generateQuantityCheckCertId(), HttpStatus.OK);
     }
 }

@@ -16,9 +16,7 @@
 package cn.com.qjun.cardboard.service.impl;
 
 import cn.com.qjun.cardboard.common.SystemConstant;
-import cn.com.qjun.cardboard.domain.BasicMaterial;
 import cn.com.qjun.cardboard.domain.StockInOrder;
-import cn.com.qjun.cardboard.domain.StockInOrderItem;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +27,6 @@ import cn.com.qjun.cardboard.service.dto.StockInOrderQueryCriteria;
 import cn.com.qjun.cardboard.service.mapstruct.StockInOrderMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import cn.hutool.core.util.IdUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import me.zhengjie.utils.PageUtil;
@@ -38,7 +35,6 @@ import me.zhengjie.utils.QueryHelp;
 import java.util.*;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
-import java.util.stream.Collectors;
 
 /**
 * @website https://el-admin.vip
@@ -76,7 +72,7 @@ public class StockInOrderServiceImpl implements StockInOrderService {
     @Transactional(rollbackFor = Exception.class)
     public StockInOrderDto create(StockInOrder resources) {
         resources.setDeleted(SystemConstant.DEL_FLAG_0);
-        resources.getStockInOrderItems()
+        resources.getOrderItems()
                 .forEach(item -> item.setStockInOrder(resources));
         return stockInOrderMapper.toDto(stockInOrderRepository.save(resources));
     }

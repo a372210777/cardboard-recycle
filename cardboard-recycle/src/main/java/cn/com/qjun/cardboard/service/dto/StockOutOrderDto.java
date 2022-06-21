@@ -18,6 +18,7 @@ package cn.com.qjun.cardboard.service.dto;
 import lombok.Data;
 import java.sql.Timestamp;
 import java.io.Serializable;
+import java.util.List;
 
 /**
 * @website https://el-admin.vip
@@ -31,14 +32,14 @@ public class StockOutOrderDto implements Serializable {
     /** 出库单号 */
     private String id;
 
-    /** 采购商ID */
-    private Integer buyerId;
+    /** 采购商 */
+    private BasicBuyerDto buyer;
 
-    /** 承运商ID */
-    private Integer carrierId;
+    /** 承运商 */
+    private BasicCarrierDto carrier;
 
-    /** 仓库ID */
-    private Integer warehouseId;
+    /** 仓库 */
+    private BasicWarehouseDto warehouse;
 
     /** 制单人 */
     private String createBy;
@@ -55,6 +56,13 @@ public class StockOutOrderDto implements Serializable {
     /** 更新时间 */
     private Timestamp updateTime;
 
-    /** 是否已删除 */
-    private Integer deleted;
+    /**
+     * 出库单明细
+     */
+    private List<StockOutOrderItemDto> orderItems;
+
+    /**
+     * 托运单明细
+     */
+    private List<WaybillDto> waybills;
 }

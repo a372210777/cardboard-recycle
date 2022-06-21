@@ -99,13 +99,13 @@ public class StockInOrder implements Serializable {
     @ApiModelProperty(value = "入库单明细")
     @NotEmpty
     @OneToMany(mappedBy = "stockInOrder", cascade = {CascadeType.ALL}, orphanRemoval = true)
-    private List<StockInOrderItem> stockInOrderItems;
+    private List<StockInOrderItem> orderItems;
 
     public void copy(StockInOrder source) {
         BeanUtil.copyProperties(source, this, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("stockInOrderItems"));
-        this.getStockInOrderItems().clear();
-        this.getStockInOrderItems().addAll(source.getStockInOrderItems());
-        this.getStockInOrderItems().forEach(item -> item.setStockInOrder(this));
+        this.getOrderItems().clear();
+        this.getOrderItems().addAll(source.getOrderItems());
+        this.getOrderItems().forEach(item -> item.setStockInOrder(this));
     }
 }

@@ -31,11 +31,11 @@ import me.zhengjie.annotation.Query;
  **/
 @Data
 public class StockInOrderQueryCriteria {
-    @Query(type = Query.Type.EQUAL, propName = "id", joinName = "stockInOrderItems>material")
+    @Query(type = Query.Type.EQUAL, propName = "id", joinName = "orderItems>material")
     @ApiModelProperty(value = "物料ID，精确匹配")
     private String materialId;
 
-    @Query(type = Query.Type.INNER_LIKE, propName = "category", joinName = "stockInOrderItems>material")
+    @Query(type = Query.Type.INNER_LIKE, propName = "category", joinName = "orderItems>material")
     @ApiModelProperty(value = "物料类别，精确查询")
     private String materialType;
 

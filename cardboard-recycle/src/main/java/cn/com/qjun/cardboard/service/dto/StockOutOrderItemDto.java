@@ -34,8 +34,8 @@ public class StockOutOrderItemDto implements Serializable {
     /** 出库单ID */
     private String stockOutOrderId;
 
-    /** 物料ID */
-    private Integer materialId;
+    /** 物料 */
+    private BasicMaterialDto material;
 
     /** 出库数量 */
     private Integer quantity;
@@ -48,4 +48,9 @@ public class StockOutOrderItemDto implements Serializable {
 
     /** 备注 */
     private String remark;
+
+    /**
+     * 质检单
+     */
+    private QualityCheckCertDto qualityCheckCert;
 }

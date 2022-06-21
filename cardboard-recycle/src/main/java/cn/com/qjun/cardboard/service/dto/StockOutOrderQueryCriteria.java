@@ -15,7 +15,11 @@
 */
 package cn.com.qjun.cardboard.service.dto;
 
+import cn.com.qjun.cardboard.common.SystemConstant;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.sql.Timestamp;
 import java.util.List;
 import me.zhengjie.annotation.Query;
 
@@ -26,4 +30,23 @@ import me.zhengjie.annotation.Query;
 **/
 @Data
 public class StockOutOrderQueryCriteria{
+    @Query(type = Query.Type.EQUAL, propName = "id", joinName = "orderItems>material")
+    @ApiModelProperty(value = "物料ID，精确匹配")
+    private String materialId;
+
+    @Query(type = Query.Type.BETWEEN)
+    @ApiModelProperty(value = "出库时间区间，between [0] and [1]", dataType = "String")
+    private List<Timestamp> stockOutTime;
+
+    @Query(type = Query.Type.EQUAL)
+    @ApiModelProperty(value = "出库单号，精确匹配")
+    private String id;
+
+    @Query(type = Query.Type.EQUAL, propName = "id", joinName = "warehouse")
+    @ApiModelProperty(value = "仓库ID，精确匹配")
+    private String warehouseId;
+
+    @Query
+    @ApiModelProperty(value = "是否已删除", hidden = true)
+    private Integer deleted = SystemConstant.DEL_FLAG_0;
 }

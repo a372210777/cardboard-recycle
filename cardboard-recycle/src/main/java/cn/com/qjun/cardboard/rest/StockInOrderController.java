@@ -80,7 +80,7 @@ public class StockInOrderController {
         if (StringUtils.isEmpty(resources.getId())) {
             throw new BadRequestException("入库单ID不能为空");
         }
-        if (CollectionUtils.isEmpty(resources.getStockInOrderItems())) {
+        if (CollectionUtils.isEmpty(resources.getOrderItems())) {
             throw new BadRequestException("入库单明细不能为空");
         }
         return new ResponseEntity<>(stockInOrderService.create(resources),HttpStatus.CREATED);
