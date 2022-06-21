@@ -97,7 +97,6 @@ public class StockInOrderItemServiceImpl implements StockInOrderItemService {
         for (StockInOrderItemDto stockInOrderItem : all) {
             Map<String,Object> map = new LinkedHashMap<>();
             map.put("入库单ID", stockInOrderItem.getStockInOrderId());
-            map.put("物料ID", stockInOrderItem.getMaterialId());
             map.put("入库数量", stockInOrderItem.getQuantity());
             map.put("数量单位", stockInOrderItem.getUnit());
             map.put("备注", stockInOrderItem.getRemark());

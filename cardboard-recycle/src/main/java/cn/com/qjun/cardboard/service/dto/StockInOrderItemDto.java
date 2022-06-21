@@ -26,6 +26,7 @@ import java.io.Serializable;
 **/
 @Data
 public class StockInOrderItemDto implements Serializable {
+    private static final long serialVersionUID = -6502330576141369524L;
 
     /** 主键ID */
     private Integer id;
@@ -33,8 +34,8 @@ public class StockInOrderItemDto implements Serializable {
     /** 入库单ID */
     private String stockInOrderId;
 
-    /** 物料ID */
-    private Integer materialId;
+    /** 物料 */
+    private BasicMaterialDto material;
 
     /** 入库数量 */
     private Integer quantity;

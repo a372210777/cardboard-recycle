@@ -15,9 +15,11 @@
 */
 package cn.com.qjun.cardboard.service.dto;
 
+import cn.com.qjun.cardboard.domain.StockInOrderItem;
 import lombok.Data;
 import java.sql.Timestamp;
 import java.io.Serializable;
+import java.util.List;
 
 /**
 * @website https://el-admin.vip
@@ -27,18 +29,19 @@ import java.io.Serializable;
 **/
 @Data
 public class StockInOrderDto implements Serializable {
+    private static final long serialVersionUID = -5729693708256297555L;
 
     /** 入库单号 */
     private String id;
 
-    /** 仓库ID */
-    private Integer warehouseId;
+    /** 仓库 */
+    private BasicWarehouseDto warehouse;
 
     /** 入库时间 */
     private Timestamp stockInTime;
 
-    /** 供应商ID */
-    private Integer supplierId;
+    /** 供应商 */
+    private BasicSupplierDto supplier;
 
     /** 制单人 */
     private String createBy;
@@ -52,6 +55,8 @@ public class StockInOrderDto implements Serializable {
     /** 更新时间 */
     private Timestamp updateTime;
 
-    /** 是否已删除 */
-    private Integer deleted;
+    /**
+     * 入库单明细
+     */
+    private List<StockInOrderItemDto> stockInOrderItems;
 }

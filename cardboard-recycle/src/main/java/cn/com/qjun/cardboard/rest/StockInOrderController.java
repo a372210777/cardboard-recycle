@@ -15,10 +15,14 @@
 */
 package cn.com.qjun.cardboard.rest;
 
+import cn.com.qjun.cardboard.utils.SerialNumberGenerator;
 import me.zhengjie.annotation.Log;
 import cn.com.qjun.cardboard.domain.StockInOrder;
 import cn.com.qjun.cardboard.service.StockInOrderService;
 import cn.com.qjun.cardboard.service.dto.StockInOrderQueryCriteria;
+import me.zhengjie.exception.BadRequestException;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -42,6 +46,15 @@ import javax.servlet.http.HttpServletResponse;
 public class StockInOrderController {
 
     private final StockInOrderService stockInOrderService;
+    private final SerialNumberGenerator serialNumberGenerator;
+
+    @GetMapping("/genId")
+    @Log("生成入库单号")
+    @ApiOperation("生成入库单号")
+    @PreAuthorize("@el.check('stockInOrder:add')")
+    public ResponseEntity<String> generateOrderId() {
+        return new ResponseEntity<>(serialNumberGenerator.generateStockInOrderId(), HttpStatus.OK);
+    }
 
     @Log("导出数据")
     @ApiOperation("导出数据")
@@ -64,6 +77,12 @@ public class StockInOrderController {
     @ApiOperation("新增入库单")
     @PreAuthorize("@el.check('stockInOrder:add')")
     public ResponseEntity<Object> createStockInOrder(@Validated @RequestBody StockInOrder resources){
+        if (StringUtils.isEmpty(resources.getId())) {
+            throw new BadRequestException("入库单ID不能为空");
+        }
+        if (CollectionUtils.isEmpty(resources.getStockInOrderItems())) {
+            throw new BadRequestException("入库单明细不能为空");
+        }
         return new ResponseEntity<>(stockInOrderService.create(resources),HttpStatus.CREATED);
     }
 

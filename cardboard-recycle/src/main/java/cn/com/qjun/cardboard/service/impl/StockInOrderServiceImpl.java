@@ -15,7 +15,10 @@
 */
 package cn.com.qjun.cardboard.service.impl;
 
+import cn.com.qjun.cardboard.common.SystemConstant;
+import cn.com.qjun.cardboard.domain.BasicMaterial;
 import cn.com.qjun.cardboard.domain.StockInOrder;
+import cn.com.qjun.cardboard.domain.StockInOrderItem;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,12 +34,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import me.zhengjie.utils.PageUtil;
 import me.zhengjie.utils.QueryHelp;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
 
 /**
 * @website https://el-admin.vip
@@ -73,7 +75,9 @@ public class StockInOrderServiceImpl implements StockInOrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StockInOrderDto create(StockInOrder resources) {
-        resources.setId(IdUtil.simpleUUID()); 
+        resources.setDeleted(SystemConstant.DEL_FLAG_0);
+        resources.getStockInOrderItems()
+                .forEach(item -> item.setStockInOrder(resources));
         return stockInOrderMapper.toDto(stockInOrderRepository.save(resources));
     }
 
@@ -88,9 +92,11 @@ public class StockInOrderServiceImpl implements StockInOrderService {
 
     @Override
     public void deleteAll(String[] ids) {
-        for (String id : ids) {
-            stockInOrderRepository.deleteById(id);
+        List<StockInOrder> allById = stockInOrderRepository.findAllById(Arrays.asList(ids));
+        for (StockInOrder stockInOrder : allById) {
+            stockInOrder.setDeleted(SystemConstant.DEL_FLAG_1);
         }
+        stockInOrderRepository.saveAll(allById);
     }
 
     @Override
@@ -98,14 +104,11 @@ public class StockInOrderServiceImpl implements StockInOrderService {
         List<Map<String, Object>> list = new ArrayList<>();
         for (StockInOrderDto stockInOrder : all) {
             Map<String,Object> map = new LinkedHashMap<>();
-            map.put("仓库ID", stockInOrder.getWarehouseId());
             map.put("入库时间", stockInOrder.getStockInTime());
-            map.put("供应商ID", stockInOrder.getSupplierId());
             map.put("制单人", stockInOrder.getCreateBy());
             map.put("制单时间", stockInOrder.getCreateTime());
             map.put("更新人", stockInOrder.getUpdateBy());
             map.put("更新时间", stockInOrder.getUpdateTime());
-            map.put("是否已删除", stockInOrder.getDeleted());
             list.add(map);
         }
         FileUtil.downloadExcel(list, response);

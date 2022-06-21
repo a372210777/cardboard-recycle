@@ -19,6 +19,7 @@ import cn.hutool.core.lang.Dict;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import lombok.RequiredArgsConstructor;
 import me.zhengjie.domain.Log;
 import me.zhengjie.repository.LogRepository;
@@ -132,7 +133,7 @@ public class LogServiceImpl implements LogService {
         if (argList.isEmpty()) {
             return "";
         }
-        return argList.size() == 1 ? JSONUtil.toJsonStr(argList.get(0)) : JSONUtil.toJsonStr(argList);
+        return argList.size() == 1 ? JSON.toJSONString(argList.get(0)) : JSON.toJSONString(argList);
     }
 
     @Override
