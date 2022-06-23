@@ -19,6 +19,7 @@ import cn.com.qjun.cardboard.common.SystemConstant;
 import cn.com.qjun.cardboard.domain.StockOutOrder;
 import cn.com.qjun.cardboard.domain.StockOutOrderItem;
 import cn.com.qjun.cardboard.domain.Waybill;
+import cn.com.qjun.cardboard.utils.SerialNumberGenerator;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,7 @@ public class StockOutOrderServiceImpl implements StockOutOrderService {
 
     private final StockOutOrderRepository stockOutOrderRepository;
     private final StockOutOrderMapper stockOutOrderMapper;
+    private final SerialNumberGenerator serialNumberGenerator;
 
     @Override
     public Map<String, Object> queryAll(StockOutOrderQueryCriteria criteria, Pageable pageable) {
@@ -74,6 +76,7 @@ public class StockOutOrderServiceImpl implements StockOutOrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StockOutOrderDto create(StockOutOrder resources) {
+        resources.setId(serialNumberGenerator.generateStockOutOrderId());
         resources.setDeleted(SystemConstant.DEL_FLAG_0);
         if (CollectionUtils.isNotEmpty(resources.getOrderItems())) {
             for (StockOutOrderItem orderItem : resources.getOrderItems()) {

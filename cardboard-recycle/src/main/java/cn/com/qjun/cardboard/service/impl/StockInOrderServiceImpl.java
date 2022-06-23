@@ -17,6 +17,7 @@ package cn.com.qjun.cardboard.service.impl;
 
 import cn.com.qjun.cardboard.common.SystemConstant;
 import cn.com.qjun.cardboard.domain.StockInOrder;
+import cn.com.qjun.cardboard.utils.SerialNumberGenerator;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,7 @@ public class StockInOrderServiceImpl implements StockInOrderService {
 
     private final StockInOrderRepository stockInOrderRepository;
     private final StockInOrderMapper stockInOrderMapper;
+    private final SerialNumberGenerator serialNumberGenerator;
 
     @Override
     public Map<String,Object> queryAll(StockInOrderQueryCriteria criteria, Pageable pageable){
@@ -71,6 +73,7 @@ public class StockInOrderServiceImpl implements StockInOrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StockInOrderDto create(StockInOrder resources) {
+        resources.setId(serialNumberGenerator.generateStockInOrderId());
         resources.setDeleted(SystemConstant.DEL_FLAG_0);
         resources.getOrderItems()
                 .forEach(item -> item.setStockInOrder(resources));
