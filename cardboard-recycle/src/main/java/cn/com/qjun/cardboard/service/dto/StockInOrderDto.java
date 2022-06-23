@@ -58,5 +58,5 @@ public class StockInOrderDto implements Serializable {
     /**
      * 入库单明细
      */
-    private List<StockInOrderItemDto> stockInOrderItems;
+    private List<StockInOrderItemDto> orderItems;
 }
