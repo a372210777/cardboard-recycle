@@ -102,7 +102,6 @@ public class DailyExpenseServiceImpl implements DailyExpenseService {
             map.put("开销金额", dailyExpense.getMoney());
             map.put("开销日期", dailyExpense.getDate());
             map.put("备注", dailyExpense.getRemark());
-            map.put("是否已删除", dailyExpense.getDeleted());
             map.put("创建人", dailyExpense.getCreateBy());
             map.put("更新人", dailyExpense.getUpdateBy());
             map.put("创建时间", dailyExpense.getCreateTime());
