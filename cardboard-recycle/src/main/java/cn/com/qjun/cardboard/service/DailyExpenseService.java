@@ -15,13 +15,10 @@
 */
 package cn.com.qjun.cardboard.service;
 
-import cn.com.qjun.cardboard.domain.StockInOrder;
-import cn.com.qjun.cardboard.service.dto.StockInOrderDto;
-import cn.com.qjun.cardboard.service.dto.StockInOrderQueryCriteria;
-import cn.com.qjun.cardboard.service.dto.StockReportDto;
+import cn.com.qjun.cardboard.domain.DailyExpense;
+import cn.com.qjun.cardboard.service.dto.DailyExpenseDto;
+import cn.com.qjun.cardboard.service.dto.DailyExpenseQueryCriteria;
 import org.springframework.data.domain.Pageable;
-
-import java.util.Date;
 import java.util.Map;
 import java.util.List;
 import java.io.IOException;
@@ -31,9 +28,9 @@ import javax.servlet.http.HttpServletResponse;
 * @website https://el-admin.vip
 * @description 服务接口
 * @author RenQiang
-* @date 2022-06-18
+* @date 2022-06-25
 **/
-public interface StockInOrderService {
+public interface DailyExpenseService {
 
     /**
     * 查询数据分页
@@ -41,40 +38,40 @@ public interface StockInOrderService {
     * @param pageable 分页参数
     * @return Map<String,Object>
     */
-    Map<String,Object> queryAll(StockInOrderQueryCriteria criteria, Pageable pageable);
+    Map<String,Object> queryAll(DailyExpenseQueryCriteria criteria, Pageable pageable);
 
     /**
     * 查询所有数据不分页
     * @param criteria 条件参数
-    * @return List<StockInOrderDto>
+    * @return List<DailyExpenseDto>
     */
-    List<StockInOrderDto> queryAll(StockInOrderQueryCriteria criteria);
+    List<DailyExpenseDto> queryAll(DailyExpenseQueryCriteria criteria);
 
     /**
      * 根据ID查询
      * @param id ID
-     * @return StockInOrderDto
+     * @return DailyExpenseDto
      */
-    StockInOrderDto findById(String id);
+    DailyExpenseDto findById(Integer id);
 
     /**
     * 创建
     * @param resources /
-    * @return StockInOrderDto
+    * @return DailyExpenseDto
     */
-    StockInOrderDto create(StockInOrder resources);
+    DailyExpenseDto create(DailyExpense resources);
 
     /**
     * 编辑
     * @param resources /
     */
-    void update(StockInOrder resources);
+    void update(DailyExpense resources);
 
     /**
     * 多选删除
     * @param ids /
     */
-    void deleteAll(String[] ids);
+    void deleteAll(Integer[] ids);
 
     /**
     * 导出数据
@@ -82,5 +79,5 @@ public interface StockInOrderService {
     * @param response /
     * @throws IOException /
     */
-    void download(List<StockInOrderDto> all, HttpServletResponse response) throws IOException;
+    void download(List<DailyExpenseDto> all, HttpServletResponse response) throws IOException;
 }

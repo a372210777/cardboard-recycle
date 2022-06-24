@@ -17,6 +17,7 @@ package cn.com.qjun.cardboard.service.impl;
 
 import cn.com.qjun.cardboard.common.SystemConstant;
 import cn.com.qjun.cardboard.domain.StockInOrder;
+import cn.com.qjun.cardboard.service.dto.StockReportDto;
 import cn.com.qjun.cardboard.utils.SerialNumberGenerator;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;

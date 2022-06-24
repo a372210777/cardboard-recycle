@@ -78,26 +78,6 @@ public class QualityCheckCert implements Serializable {
     @ApiModelProperty(value = "扣重", required = true)
     private Double deductWeight;
 
-    @Column(name = "`weighting_time`", nullable = false)
-    @NotNull
-    @ApiModelProperty(value = "称重时间", required = true)
-    private Timestamp weightingTime;
-
-    @Column(name = "`license_plate`", nullable = false)
-    @NotBlank
-    @ApiModelProperty(value = "车牌号", required = true)
-    private String licensePlate;
-
-    @Column(name = "`total_packs`", nullable = false)
-    @NotNull
-    @ApiModelProperty(value = "总件数", required = true)
-    private Integer totalPacks;
-
-    @Column(name = "`spot_check_packs`", nullable = false)
-    @NotNull
-    @ApiModelProperty(value = "抽检数", required = true)
-    private Integer spotCheckPacks;
-
     @Column(name = "`water_percent`", nullable = false)
     @NotNull
     @ApiModelProperty(value = "水分百分比", required = true)

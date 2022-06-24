@@ -77,9 +77,6 @@ public class StockInOrderController {
     @ApiOperation("新增入库单")
     @PreAuthorize("@el.check('stockInOrder:add')")
     public ResponseEntity<Object> createStockInOrder(@Validated @RequestBody StockInOrder resources){
-        if (StringUtils.isEmpty(resources.getId())) {
-            throw new BadRequestException("入库单ID不能为空");
-        }
         if (CollectionUtils.isEmpty(resources.getOrderItems())) {
             throw new BadRequestException("入库单明细不能为空");
         }

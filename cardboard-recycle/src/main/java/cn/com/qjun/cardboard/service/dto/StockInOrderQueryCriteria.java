@@ -33,11 +33,11 @@ import me.zhengjie.annotation.Query;
 public class StockInOrderQueryCriteria {
     @Query(type = Query.Type.EQUAL, propName = "id", joinName = "orderItems>material")
     @ApiModelProperty(value = "物料ID，精确匹配")
-    private String materialId;
+    private Integer materialId;
 
-    @Query(type = Query.Type.INNER_LIKE, propName = "category", joinName = "orderItems>material")
+    @Query(type = Query.Type.EQUAL, propName = "category", joinName = "orderItems>material")
     @ApiModelProperty(value = "物料类别，精确查询")
-    private String materialType;
+    private String materialCategory;
 
     @Query(type = Query.Type.BETWEEN)
     @ApiModelProperty(value = "入库时间区间，between [0] and [1]", dataType = "String")
@@ -49,11 +49,11 @@ public class StockInOrderQueryCriteria {
 
     @Query(type = Query.Type.EQUAL, propName = "id", joinName = "warehouse")
     @ApiModelProperty(value = "仓库ID，精确匹配")
-    private String warehouseId;
+    private Integer warehouseId;
 
     @Query(type = Query.Type.EQUAL, propName = "id", joinName = "supplier")
     @ApiModelProperty(value = "供应商ID，精确匹配")
-    private String supplierId;
+    private Integer supplierId;
 
     @Query
     @ApiModelProperty(value = "是否已删除", hidden = true)

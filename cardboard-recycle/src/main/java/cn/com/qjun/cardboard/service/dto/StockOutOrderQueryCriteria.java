@@ -32,7 +32,11 @@ import me.zhengjie.annotation.Query;
 public class StockOutOrderQueryCriteria{
     @Query(type = Query.Type.EQUAL, propName = "id", joinName = "orderItems>material")
     @ApiModelProperty(value = "物料ID，精确匹配")
-    private String materialId;
+    private Integer materialId;
+
+    @Query(type = Query.Type.EQUAL, propName = "category", joinName = "orderItems>material")
+    @ApiModelProperty(value = "物料类别，精确查询")
+    private String materialCategory;
 
     @Query(type = Query.Type.BETWEEN)
     @ApiModelProperty(value = "出库时间区间，between [0] and [1]", dataType = "String")
@@ -44,7 +48,7 @@ public class StockOutOrderQueryCriteria{
 
     @Query(type = Query.Type.EQUAL, propName = "id", joinName = "warehouse")
     @ApiModelProperty(value = "仓库ID，精确匹配")
-    private String warehouseId;
+    private Integer warehouseId;
 
     @Query
     @ApiModelProperty(value = "是否已删除", hidden = true)

@@ -50,18 +50,6 @@ public class QualityCheckCertDto implements Serializable {
     /** 扣重 */
     private Double deductWeight;
 
-    /** 称重时间 */
-    private Timestamp weightingTime;
-
-    /** 车牌号 */
-    private String licensePlate;
-
-    /** 总件数 */
-    private Integer totalPacks;
-
-    /** 抽检数 */
-    private Integer spotCheckPacks;
-
     /** 水分百分比 */
     private BigDecimal waterPercent;
 
