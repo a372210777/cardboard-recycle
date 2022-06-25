@@ -35,9 +35,6 @@ public class QualityCheckCertDto implements Serializable {
     /** 所属出库单明细 */
     private Integer stockOutOrderItemId;
 
-    /** 采购商 */
-    private BasicBuyerDto buyer;
-
     /** 毛重 */
     private Double grossWeight;
 

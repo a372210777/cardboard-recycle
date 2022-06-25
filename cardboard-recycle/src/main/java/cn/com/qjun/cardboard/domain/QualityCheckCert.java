@@ -52,12 +52,6 @@ public class QualityCheckCert implements Serializable {
     @ManyToOne
     private StockOutOrderItem stockOutOrderItem;
 
-    @JoinColumn(name = "`buyer_id`", nullable = false)
-    @NotNull
-    @ApiModelProperty(value = "采购商", required = true)
-    @OneToOne
-    private BasicBuyer buyer;
-
     @Column(name = "`gross_weight`", nullable = false)
     @NotNull
     @ApiModelProperty(value = "毛重", required = true)
