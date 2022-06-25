@@ -1,9 +1,12 @@
 package cn.com.qjun.cardboard.rest;
 
+import cn.com.qjun.cardboard.common.echart.MudhChartData;
 import cn.com.qjun.cardboard.service.DailyExpenseService;
 import cn.com.qjun.cardboard.service.StockInOrderService;
 import cn.com.qjun.cardboard.service.StockOutOrderService;
 import cn.com.qjun.cardboard.service.dto.*;
+import cn.com.qjun.cardboard.utils.ChartUtils;
+import cn.com.qjun.cardboard.utils.DateTimeUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -11,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import me.zhengjie.annotation.Log;
 import me.zhengjie.utils.DateUtil;
 import me.zhengjie.utils.FileUtil;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,8 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,7 +57,7 @@ public class ReportController {
     public ResponseEntity<List<StockReportDto>> stockReport(@RequestParam(required = false) @ApiParam("仓库ID") Integer warehouseId,
                                                             @RequestParam(required = false) @ApiParam("物料类别") String materialCategory,
                                                             @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
-                                                            @RequestParam @ApiParam(value = "同i就结束日期", required = true) Timestamp endDate,
+                                                            @RequestParam @ApiParam(value = "统计结束日期", required = true) Timestamp endDate,
                                                             @RequestParam(required = false) Integer materialId,
                                                             @RequestParam @ApiParam("订单类型：stockIn-入库 stockOut-出库") String orderType,
                                                             @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType) {
@@ -202,7 +211,7 @@ public class ReportController {
                                   @RequestParam(required = false) @ApiParam("仓库ID") Integer warehouseId,
                                   @RequestParam(required = false) @ApiParam("物料类别") String materialCategory,
                                   @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
-                                  @RequestParam @ApiParam(value = "同i就结束日期", required = true) Timestamp endDate,
+                                  @RequestParam @ApiParam(value = "统计结束日期", required = true) Timestamp endDate,
                                   @RequestParam(required = false) Integer materialId,
                                   @RequestParam @ApiParam("订单类型：stockIn-入库 stockOut-出库") String orderType,
                                   @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType) throws IOException {
@@ -227,7 +236,7 @@ public class ReportController {
     @PreAuthorize("@el.check('report:expense')")
     public ResponseEntity<List<ExpenseReportDto>> expenseReport(@RequestParam(required = false) @ApiParam("开销种类") String category,
                                                                 @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
-                                                                @RequestParam @ApiParam(value = "同i就结束日期", required = true) Timestamp endDate) {
+                                                                @RequestParam @ApiParam(value = "统计结束日期", required = true) Timestamp endDate) {
         DailyExpenseQueryCriteria criteria = new DailyExpenseQueryCriteria();
         criteria.setDates(Stream.of(beginDate, endDate).collect(Collectors.toList()));
         criteria.setCategory(category);
@@ -256,9 +265,9 @@ public class ReportController {
     @GetMapping(value = "/expense/download")
     @PreAuthorize("@el.check('report:expense')")
     public void exportExpenseReport(HttpServletResponse response,
-                                  @RequestParam(required = false) @ApiParam("开销种类") String category,
-                                  @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
-                                  @RequestParam @ApiParam(value = "同i就结束日期", required = true) Timestamp endDate) throws IOException {
+                                    @RequestParam(required = false) @ApiParam("开销种类") String category,
+                                    @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
+                                    @RequestParam @ApiParam(value = "统计结束日期", required = true) Timestamp endDate) throws IOException {
         ResponseEntity<List<ExpenseReportDto>> responseEntity = expenseReport(category, beginDate, endDate);
         List<Map<String, Object>> list = new ArrayList<>();
         for (ExpenseReportDto reportDto : Objects.requireNonNull(responseEntity.getBody())) {
@@ -269,5 +278,59 @@ public class ReportController {
             list.add(map);
         }
         FileUtil.downloadExcel(list, response);
+    }
+
+    @Log("入库统计图")
+    @ApiOperation("入库统计图")
+    @GetMapping(value = "/chart/stockIn")
+    @PreAuthorize("@el.check('report:chart:stockIn')")
+    public ResponseEntity<MudhChartData> stockInChart(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") @ApiParam(value = "统计开始日期", required = true) LocalDate beginDate,
+                                                      @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") @ApiParam(value = "统计结束日期", required = true) LocalDate endDate) {
+        List<Map<String, Object>> dataList = stockInOrderService.groupingStatistics(beginDate, endDate.plusDays(1));
+        return new ResponseEntity<>(convertMapToChartData(dataList, beginDate, endDate), HttpStatus.OK);
+    }
+
+    @Log("出库统计图")
+    @ApiOperation("出库统计图")
+    @GetMapping(value = "/chart/stockOut")
+    @PreAuthorize("@el.check('report:chart:stockOut')")
+    public ResponseEntity<MudhChartData> stockOutChart(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") @ApiParam(value = "统计开始日期", required = true) LocalDate beginDate,
+                                                      @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") @ApiParam(value = "统计结束日期", required = true) LocalDate endDate) {
+        List<Map<String, Object>> dataList = stockOutOrderService.groupingStatistics(beginDate, endDate.plusDays(1));
+        return new ResponseEntity<>(convertMapToChartData(dataList, beginDate, endDate), HttpStatus.OK);
+    }
+
+    public static MudhChartData<LocalDate, String, BigDecimal> convertMapToChartData(List<Map<String, Object>> dataList, LocalDate beginDate, LocalDate endDate) {
+        Map<LocalDate, Map<String, Object>> collect = dataList.stream()
+                .collect(Collectors.groupingBy(map -> ((Date) map.get("date_")).toLocalDate(),
+                        Collectors.collectingAndThen(Collectors.toList(), list -> {
+                            Map<String, Object> map = new HashMap<>();
+                            for (Map<String, Object> item : list) {
+                                map.put((String) item.get("material"), item.get("quantity"));
+                            }
+                            return map;
+                        })));
+        String[] materials = collect.values().stream()
+                .flatMap(map -> map.keySet().stream())
+                .distinct()
+                .toArray(String[]::new);
+        List<LocalDate> dateList = DateTimeUtils.generateDateSequence(beginDate, endDate.plusDays(1), Period.ofDays(1));
+        List<Map<String, Object>> chartDataList = dateList.stream()
+                .map(date -> {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("date", date);
+                    if (MapUtils.isNotEmpty(collect.get(date))) {
+                        data.putAll(collect.get(date));
+                    }
+                    for (String material : materials) {
+                        data.putIfAbsent(material, BigDecimal.ZERO);
+                    }
+                    return data;
+                })
+                .collect(Collectors.toList());
+        Function<Map<String, Object>, BigDecimal>[] yConverters = Arrays.stream(materials)
+                .map(material -> (Function<Map<String, Object>, BigDecimal>) map -> (BigDecimal) map.get(material))
+                .toArray(Function[]::new);
+        return ChartUtils.buildMudhFromDataList(chartDataList, map -> (LocalDate) map.get("date"), materials, yConverters);
     }
 }

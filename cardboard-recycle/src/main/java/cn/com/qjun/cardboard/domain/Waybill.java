@@ -40,9 +40,10 @@ public class Waybill implements Serializable {
     private static final long serialVersionUID = -1537607144100906524L;
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "`id`")
-    @ApiModelProperty(value = "托运单号")
-    private String id;
+    @ApiModelProperty(value = "自增主键ID")
+    private Integer id;
 
     @JoinColumn(name = "`stock_out_order_id`", nullable = false)
     @NotBlank

@@ -41,10 +41,10 @@ public class QualityCheckCert implements Serializable {
     private static final long serialVersionUID = 2659205448502508947L;
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "`id`")
-    @NotBlank
-    @ApiModelProperty(value = "质检单号", required = true)
-    private String id;
+    @ApiModelProperty(value = "自增主键ID")
+    private Integer id;
 
     @JoinColumn(name = "`stock_out_order_item_id`", nullable = false)
     @NotNull

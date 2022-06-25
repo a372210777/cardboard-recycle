@@ -32,7 +32,7 @@ public class WaybillDto implements Serializable {
     /**
      * 托运单号
      */
-    private String id;
+    private Integer id;
 
     /**
      * 出库单ID

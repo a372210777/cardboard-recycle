@@ -30,7 +30,7 @@ import java.io.Serializable;
 public class QualityCheckCertDto implements Serializable {
 
     /** 质检单号 */
-    private String id;
+    private Integer id;
 
     /** 所属出库单明细 */
     private Integer stockOutOrderItemId;

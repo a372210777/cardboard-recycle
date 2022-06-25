@@ -34,6 +34,8 @@ import org.springframework.data.domain.Pageable;
 import me.zhengjie.utils.PageUtil;
 import me.zhengjie.utils.QueryHelp;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.*;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
@@ -112,5 +114,10 @@ public class StockInOrderServiceImpl implements StockInOrderService {
             list.add(map);
         }
         FileUtil.downloadExcel(list, response);
+    }
+
+    @Override
+    public List<Map<String, Object>> groupingStatistics(LocalDate beginDate, LocalDate endDate) {
+        return stockInOrderRepository.groupingStatistics(beginDate, endDate);
     }
 }

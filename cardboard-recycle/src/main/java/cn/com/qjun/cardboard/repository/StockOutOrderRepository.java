@@ -18,6 +18,11 @@ package cn.com.qjun.cardboard.repository;
 import cn.com.qjun.cardboard.domain.StockOutOrder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 /**
 * @website https://el-admin.vip
@@ -25,4 +30,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 * @date 2022-06-18
 **/
 public interface StockOutOrderRepository extends JpaRepository<StockOutOrder, String>, JpaSpecificationExecutor<StockOutOrder> {
+    @Query(value = "select date(o.stock_out_time) as date_, m.name_ as material, sum(oi.quantity) as quantity from biz_stock_out_order o join biz_stock_out_order_item oi on o.id = oi.stock_out_order_id join basic_material m on m.id = oi.material_id where o.stock_out_time between ?1 and ?2 group by date(o.stock_out_time), oi.material_id", nativeQuery = true)
+    List<Map<String, Object>> groupingStatistics(LocalDate beginDate, LocalDate endDate);
 }
