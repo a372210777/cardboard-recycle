@@ -88,7 +88,8 @@ public class DailyExpenseServiceImpl implements DailyExpenseService {
     public void deleteAll(Integer[] ids) {
         List<DailyExpense> allById = dailyExpenseRepository.findAllById(Arrays.asList(ids));
         for (DailyExpense dailyExpense : allById) {
-            dailyExpense.setDeleted(SystemConstant.DEL_FLAG_0);
+            dailyExpense.setDeleted(SystemConstant.DEL_FLAG_1);
+
         }
         dailyExpenseRepository.saveAll(allById);
     }

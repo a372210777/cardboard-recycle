@@ -40,16 +40,6 @@ public class WaybillDto implements Serializable {
     private String stockOutOrderId;
 
     /**
-     * 采购商
-     */
-    private BasicBuyerDto buyer;
-
-    /**
-     * 承运商
-     */
-    private BasicCarrierDto carrier;
-
-    /**
      * 托运车数
      */
     private Integer consignmentVehicles;

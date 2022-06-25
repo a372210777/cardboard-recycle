@@ -250,4 +250,24 @@ public class ReportController {
                 .collect(Collectors.toList());
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
+
+    @Log("开销统计导出")
+    @ApiOperation("开销统计导出")
+    @GetMapping(value = "/expense/download")
+    @PreAuthorize("@el.check('report:expense')")
+    public void exportExpenseReport(HttpServletResponse response,
+                                  @RequestParam(required = false) @ApiParam("开销种类") String category,
+                                  @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
+                                  @RequestParam @ApiParam(value = "同i就结束日期", required = true) Timestamp endDate) throws IOException {
+        ResponseEntity<List<ExpenseReportDto>> responseEntity = expenseReport(category, beginDate, endDate);
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (ExpenseReportDto reportDto : Objects.requireNonNull(responseEntity.getBody())) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("开销分类", reportDto.getCategory());
+            map.put("总金额", reportDto.getMoney());
+            map.put("统计日期", reportDto.getDate());
+            list.add(map);
+        }
+        FileUtil.downloadExcel(list, response);
+    }
 }

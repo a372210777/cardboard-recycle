@@ -78,6 +78,11 @@ public class QualityCheckCert implements Serializable {
     @ApiModelProperty(value = "扣重", required = true)
     private Double deductWeight;
 
+    @Column(name = "`actual_weight`", nullable = false)
+    @NotNull
+    @ApiModelProperty(value = "合计重量", required = true)
+    private Double actualWeight;
+
     @Column(name = "`water_percent`", nullable = false)
     @NotNull
     @ApiModelProperty(value = "水分百分比", required = true)

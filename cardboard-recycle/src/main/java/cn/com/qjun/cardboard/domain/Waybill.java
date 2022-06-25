@@ -46,21 +46,9 @@ public class Waybill implements Serializable {
 
     @JoinColumn(name = "`stock_out_order_id`", nullable = false)
     @NotBlank
-    @ApiModelProperty(value = "出库单ID")
+    @ApiModelProperty(value = "出库单")
     @ManyToOne
     private StockOutOrder stockOutOrder;
-
-    @JoinColumn(name = "`buyer_id`", nullable = false)
-    @NotNull
-    @ApiModelProperty(value = "采购商", required = true)
-    @OneToOne
-    private BasicBuyer buyer;
-
-    @JoinColumn(name = "`carrier_id`", nullable = false)
-    @NotNull
-    @ApiModelProperty(value = "承运商", required = true)
-    @OneToOne
-    private BasicCarrier carrier;
 
     @Column(name = "`consignment_vehicles`", nullable = false)
     @NotNull

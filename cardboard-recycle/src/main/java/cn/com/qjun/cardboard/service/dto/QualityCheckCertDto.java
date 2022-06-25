@@ -50,6 +50,11 @@ public class QualityCheckCertDto implements Serializable {
     /** 扣重 */
     private Double deductWeight;
 
+    /**
+     * 合计重量
+     */
+    private Double actualWeight;
+
     /** 水分百分比 */
     private BigDecimal waterPercent;
 
