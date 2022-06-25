@@ -18,6 +18,7 @@ package cn.com.qjun.cardboard.service.dto;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.io.Serializable;
+import java.util.List;
 
 /**
 * @website https://el-admin.vip
@@ -52,5 +53,5 @@ public class StockOutOrderItemDto implements Serializable {
     /**
      * 质检单
      */
-    private QualityCheckCertDto qualityCheckCert;
+    private List<QualityCheckCertDto> qualityCheckCerts;
 }
