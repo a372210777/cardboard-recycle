@@ -81,8 +81,8 @@ public class StockOutOrderServiceImpl implements StockOutOrderService {
         if (CollectionUtils.isNotEmpty(resources.getOrderItems())) {
             for (StockOutOrderItem orderItem : resources.getOrderItems()) {
                 orderItem.setStockOutOrder(resources);
-                if (orderItem.getQualityCheckCert() != null) {
-                    orderItem.getQualityCheckCert().setStockOutOrderItem(orderItem);
+                if (CollectionUtils.isNotEmpty(orderItem.getQualityCheckCerts())) {
+                    orderItem.getQualityCheckCerts().forEach(cert -> cert.setStockOutOrderItem(orderItem));
                 }
             }
         }

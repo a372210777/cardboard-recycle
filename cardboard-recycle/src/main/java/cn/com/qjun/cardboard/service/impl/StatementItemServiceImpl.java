@@ -96,8 +96,6 @@ public class StatementItemServiceImpl implements StatementItemService {
         List<Map<String, Object>> list = new ArrayList<>();
         for (StatementItemDto statementItem : all) {
             Map<String,Object> map = new LinkedHashMap<>();
-            map.put("对账单ID", statementItem.getStatementId());
-            map.put("物料ID", statementItem.getMaterialId());
             map.put("数量", statementItem.getQuantity());
             map.put("采购单价", statementItem.getPurchasePrice());
             map.put("合计金额", statementItem.getTotalAmount());

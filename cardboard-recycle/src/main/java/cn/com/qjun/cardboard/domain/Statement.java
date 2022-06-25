@@ -15,14 +15,22 @@
 */
 package cn.com.qjun.cardboard.domain;
 
-import lombok.Data;
 import cn.hutool.core.bean.BeanUtil;
 import io.swagger.annotations.ApiModelProperty;
 import cn.hutool.core.bean.copier.CopyOptions;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.sql.Timestamp;
 import java.io.Serializable;
+import java.util.List;
 
 /**
 * @website https://el-admin.vip
@@ -31,9 +39,12 @@ import java.io.Serializable;
 * @date 2022-06-18
 **/
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name="biz_statement")
+@EntityListeners(AuditingEntityListener.class)
 public class Statement implements Serializable {
+    private static final long serialVersionUID = -7797740222712444925L;
 
     @Id
     @Column(name = "`id`")
@@ -42,43 +53,54 @@ public class Statement implements Serializable {
 
     @Column(name = "`year_`",nullable = false)
     @NotNull
-    @ApiModelProperty(value = "对账年份")
+    @ApiModelProperty(value = "对账年份", required = true)
     private Integer year;
 
     @Column(name = "`month_`",nullable = false)
     @NotNull
-    @ApiModelProperty(value = "对账月份")
+    @ApiModelProperty(value = "对账月份", required = true)
     private Integer month;
 
     @Column(name = "`create_by`",nullable = false)
     @NotBlank
-    @ApiModelProperty(value = "对账人")
+    @ApiModelProperty(value = "对账人", hidden = true)
     private String createBy;
 
+    @CreatedBy
     @Column(name = "`statement_time`",nullable = false)
     @NotNull
-    @ApiModelProperty(value = "对账时间")
+    @ApiModelProperty(value = "对账时间", required = true)
     private Timestamp statementTime;
 
+    @CreationTimestamp
     @Column(name = "`create_time`",nullable = false)
     @NotNull
-    @ApiModelProperty(value = "创建时间")
+    @ApiModelProperty(value = "创建时间", hidden = true)
     private Timestamp createTime;
 
+    @LastModifiedBy
     @Column(name = "`update_by`")
-    @ApiModelProperty(value = "更新人")
+    @ApiModelProperty(value = "更新人", hidden = true)
     private String updateBy;
 
+    @LastModifiedDate
     @Column(name = "`update_time`")
-    @ApiModelProperty(value = "更新时间")
+    @ApiModelProperty(value = "更新时间", hidden = true)
     private Timestamp updateTime;
 
     @Column(name = "`deleted`",nullable = false)
     @NotNull
-    @ApiModelProperty(value = "是否已删除")
+    @ApiModelProperty(value = "是否已删除", hidden = true)
     private Integer deleted;
 
+    @ApiModelProperty(value = "对账单明细", required = true)
+    @OneToMany(mappedBy = "statement", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StatementItem> statementItems;
+
     public void copy(Statement source){
-        BeanUtil.copyProperties(source,this, CopyOptions.create().setIgnoreNullValue(true));
+        BeanUtil.copyProperties(source,this, CopyOptions.create().setIgnoreNullValue(true).setIgnoreProperties("statementItems"));
+        this.getStatementItems().clear();
+        this.getStatementItems().addAll(source.getStatementItems());
+        this.getStatementItems().forEach(item -> item.setStatement(this));
     }
 }

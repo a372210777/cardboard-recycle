@@ -24,6 +24,7 @@ import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.math.BigDecimal;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @author RenQiang
@@ -73,8 +74,9 @@ public class StockOutOrderItem implements Serializable {
     @ApiModelProperty(value = "备注")
     private String remark;
 
-    @OneToOne(mappedBy = "stockOutOrderItem", cascade = CascadeType.ALL, orphanRemoval = true)
-    private QualityCheckCert qualityCheckCert;
+    @ApiModelProperty(value = "质检单")
+    @OneToMany(mappedBy = "stockOutOrderItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<QualityCheckCert> qualityCheckCerts;
 
     public void copy(StockOutOrderItem source) {
         BeanUtil.copyProperties(source, this, CopyOptions.create().setIgnoreNullValue(true));

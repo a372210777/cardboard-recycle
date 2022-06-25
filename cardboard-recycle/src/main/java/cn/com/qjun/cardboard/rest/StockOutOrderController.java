@@ -86,7 +86,7 @@ public class StockOutOrderController {
         for (StockOutOrderItem orderItem : resources.getOrderItems()) {
             if ("paper".equals(orderItem.getMaterial().getCategory())) {
                 hasPaper = true;
-                if (orderItem.getQualityCheckCert() == null || StringUtils.isEmpty(orderItem.getQualityCheckCert().getId())) {
+                if (CollectionUtils.isEmpty(orderItem.getQualityCheckCerts())) {
                     throw new BadRequestException("纸类物料出库单质检单必填");
                 }
             }

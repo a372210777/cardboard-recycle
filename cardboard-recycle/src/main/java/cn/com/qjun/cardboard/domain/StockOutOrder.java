@@ -123,8 +123,8 @@ public class StockOutOrder implements Serializable {
             this.getOrderItems()
                     .forEach(item -> {
                         item.setStockOutOrder(this);
-                        if (item.getQualityCheckCert() != null) {
-                            item.getQualityCheckCert().setStockOutOrderItem(item);
+                        if (CollectionUtils.isNotEmpty(item.getQualityCheckCerts())) {
+                            item.getQualityCheckCerts().forEach(cert -> cert.setStockOutOrderItem(item));
                         }
                     });
         }

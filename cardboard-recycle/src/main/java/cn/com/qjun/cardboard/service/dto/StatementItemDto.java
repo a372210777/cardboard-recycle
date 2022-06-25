@@ -27,15 +27,16 @@ import java.io.Serializable;
 **/
 @Data
 public class StatementItemDto implements Serializable {
+    private static final long serialVersionUID = 7733817496345875229L;
 
     /** 自增主键ID */
     private Integer id;
 
-    /** 对账单ID */
-    private String statementId;
+    /** 对账单 */
+    private StatementDto statement;
 
-    /** 物料ID */
-    private Integer materialId;
+    /** 物料 */
+    private BasicMaterialDto material;
 
     /** 数量 */
     private Integer quantity;
@@ -48,4 +49,9 @@ public class StatementItemDto implements Serializable {
 
     /** 对账结果 */
     private String statementResult;
+
+    /**
+     * 备注
+     */
+    private String remark;
 }

@@ -15,28 +15,27 @@
 */
 package cn.com.qjun.cardboard.service.impl;
 
+import cn.com.qjun.cardboard.common.SystemConstant;
 import cn.com.qjun.cardboard.domain.Statement;
+import cn.com.qjun.cardboard.service.dto.StatementQueryCriteria;
+import cn.com.qjun.cardboard.utils.SerialNumberGenerator;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
 import cn.com.qjun.cardboard.repository.StatementRepository;
 import cn.com.qjun.cardboard.service.StatementService;
 import cn.com.qjun.cardboard.service.dto.StatementDto;
-import cn.com.qjun.cardboard.service.dto.StatementQueryCriteria;
 import cn.com.qjun.cardboard.service.mapstruct.StatementMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import cn.hutool.core.util.IdUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import me.zhengjie.utils.PageUtil;
 import me.zhengjie.utils.QueryHelp;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 /**
 * @website https://el-admin.vip
@@ -50,6 +49,7 @@ public class StatementServiceImpl implements StatementService {
 
     private final StatementRepository statementRepository;
     private final StatementMapper statementMapper;
+    private final SerialNumberGenerator serialNumberGenerator;
 
     @Override
     public Map<String,Object> queryAll(StatementQueryCriteria criteria, Pageable pageable){
@@ -73,7 +73,9 @@ public class StatementServiceImpl implements StatementService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StatementDto create(Statement resources) {
-        resources.setId(IdUtil.simpleUUID()); 
+        resources.setId(serialNumberGenerator.generateStatementId());
+        resources.setDeleted(0);
+        resources.getStatementItems().forEach(item -> item.setStatement(resources));
         return statementMapper.toDto(statementRepository.save(resources));
     }
 
@@ -88,9 +90,11 @@ public class StatementServiceImpl implements StatementService {
 
     @Override
     public void deleteAll(String[] ids) {
-        for (String id : ids) {
-            statementRepository.deleteById(id);
+        List<Statement> allById = statementRepository.findAllById(Arrays.asList(ids));
+        for (Statement statement : allById) {
+            statement.setDeleted(SystemConstant.DEL_FLAG_1);
         }
+        statementRepository.saveAll(allById);
     }
 
     @Override
@@ -105,7 +109,6 @@ public class StatementServiceImpl implements StatementService {
             map.put("创建时间", statement.getCreateTime());
             map.put("更新人", statement.getUpdateBy());
             map.put("更新时间", statement.getUpdateTime());
-            map.put("是否已删除", statement.getDeleted());
             list.add(map);
         }
         FileUtil.downloadExcel(list, response);
