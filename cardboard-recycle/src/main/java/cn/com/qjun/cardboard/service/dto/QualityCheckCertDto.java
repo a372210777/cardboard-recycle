@@ -16,6 +16,8 @@
 package cn.com.qjun.cardboard.service.dto;
 
 import lombok.Data;
+import me.zhengjie.service.dto.LocalStorageDto;
+
 import java.sql.Timestamp;
 import java.math.BigDecimal;
 import java.io.Serializable;
@@ -65,10 +67,10 @@ public class QualityCheckCertDto implements Serializable {
     private BigDecimal totalDeductPercent;
 
     /** 称重单附件 */
-    private String weighingAttachment;
+    private LocalStorageDto weighingAttachment;
 
     /** 质检单附件 */
-    private String attachment;
+    private LocalStorageDto attachment;
 
     /** 备注 */
     private String remark;

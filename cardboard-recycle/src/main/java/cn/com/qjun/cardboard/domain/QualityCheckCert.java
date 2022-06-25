@@ -20,6 +20,7 @@ import io.swagger.annotations.ApiModelProperty;
 import cn.hutool.core.bean.copier.CopyOptions;
 import lombok.Getter;
 import lombok.Setter;
+import me.zhengjie.domain.LocalStorage;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
@@ -97,13 +98,15 @@ public class QualityCheckCert implements Serializable {
     @ApiModelProperty(value = "综合折率", required = true)
     private BigDecimal totalDeductPercent;
 
-    @Column(name = "`weighing_attachment`")
+    @JoinColumn(name = "`weighing_attachment`")
     @ApiModelProperty(value = "称重单附件")
-    private String weighingAttachment;
+    @OneToOne
+    private LocalStorage weighingAttachment;
 
-    @Column(name = "`attachment`")
+    @JoinColumn(name = "`attachment`")
     @ApiModelProperty(value = "质检单附件")
-    private String attachment;
+    @OneToOne
+    private LocalStorage attachment;
 
     @Column(name = "`remark`")
     @ApiModelProperty(value = "备注")
