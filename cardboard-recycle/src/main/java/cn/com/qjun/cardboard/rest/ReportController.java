@@ -56,12 +56,12 @@ public class ReportController {
     @PreAuthorize("@el.check('report:stock')")
     public ResponseEntity<List<StockReportDto>> stockReport(@RequestParam(required = false) @ApiParam("仓库ID") Integer warehouseId,
                                                             @RequestParam(required = false) @ApiParam("物料类别") String materialCategory,
-                                                            @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
-                                                            @RequestParam @ApiParam(value = "统计结束日期", required = true) Timestamp endDate,
+                                                            @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
+                                                            @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
                                                             @RequestParam(required = false) Integer materialId,
                                                             @RequestParam @ApiParam("订单类型：stockIn-入库 stockOut-出库") String orderType,
                                                             @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType) {
-        List<Timestamp> duration = Stream.of(beginDate, endDate)
+        List<Timestamp> duration = Stream.of(Timestamp.valueOf(beginDate.atStartOfDay()), Timestamp.valueOf(endDate.plusDays(1).atStartOfDay()))
                 .collect(Collectors.toList());
         if ("stockIn".equals(orderType)) {
             StockInOrderQueryCriteria criteria = new StockInOrderQueryCriteria();
@@ -123,8 +123,8 @@ public class ReportController {
                         .map(entry -> {
                             StockReportDto reportDto = entry.getKey();
                             reportDto.setQuantity(entry.getValue());
-                            reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate.toLocalDateTime()),
-                                    DateUtil.DFY_MD.format(endDate.toLocalDateTime())));
+                            reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate),
+                                    DateUtil.DFY_MD.format(endDate)));
                             return reportDto;
                         })
                         .collect(Collectors.toList());
@@ -191,8 +191,8 @@ public class ReportController {
                         .map(entry -> {
                             StockReportDto reportDto = entry.getKey();
                             reportDto.setQuantity(entry.getValue());
-                            reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate.toLocalDateTime()),
-                                    DateUtil.DFY_MD.format(endDate.toLocalDateTime())));
+                            reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate),
+                                    DateUtil.DFY_MD.format(endDate)));
                             return reportDto;
                         })
                         .collect(Collectors.toList());
@@ -210,8 +210,8 @@ public class ReportController {
     public void exportStockReport(HttpServletResponse response,
                                   @RequestParam(required = false) @ApiParam("仓库ID") Integer warehouseId,
                                   @RequestParam(required = false) @ApiParam("物料类别") String materialCategory,
-                                  @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
-                                  @RequestParam @ApiParam(value = "统计结束日期", required = true) Timestamp endDate,
+                                  @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
+                                  @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
                                   @RequestParam(required = false) Integer materialId,
                                   @RequestParam @ApiParam("订单类型：stockIn-入库 stockOut-出库") String orderType,
                                   @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType) throws IOException {
@@ -235,10 +235,10 @@ public class ReportController {
     @ApiOperation("开销统计")
     @PreAuthorize("@el.check('report:expense')")
     public ResponseEntity<List<ExpenseReportDto>> expenseReport(@RequestParam(required = false) @ApiParam("开销种类") String category,
-                                                                @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
-                                                                @RequestParam @ApiParam(value = "统计结束日期", required = true) Timestamp endDate) {
+                                                                @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
+                                                                @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
         DailyExpenseQueryCriteria criteria = new DailyExpenseQueryCriteria();
-        criteria.setDates(Stream.of(beginDate, endDate).collect(Collectors.toList()));
+        criteria.setDates(Stream.of(Timestamp.valueOf(beginDate.atStartOfDay()), Timestamp.valueOf(endDate.plusDays(1).atStartOfDay())).collect(Collectors.toList()));
         criteria.setCategory(category);
         List<DailyExpenseDto> dailyExpenseDtos = dailyExpenseService.queryAll(criteria);
         Map<ExpenseReportDto, Double> grouped = dailyExpenseDtos.stream()
@@ -266,8 +266,8 @@ public class ReportController {
     @PreAuthorize("@el.check('report:expense')")
     public void exportExpenseReport(HttpServletResponse response,
                                     @RequestParam(required = false) @ApiParam("开销种类") String category,
-                                    @RequestParam @ApiParam(value = "统计开始日期", required = true) Timestamp beginDate,
-                                    @RequestParam @ApiParam(value = "统计结束日期", required = true) Timestamp endDate) throws IOException {
+                                    @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
+                                    @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) throws IOException {
         ResponseEntity<List<ExpenseReportDto>> responseEntity = expenseReport(category, beginDate, endDate);
         List<Map<String, Object>> list = new ArrayList<>();
         for (ExpenseReportDto reportDto : Objects.requireNonNull(responseEntity.getBody())) {
