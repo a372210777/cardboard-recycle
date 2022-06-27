@@ -82,7 +82,7 @@ public class ReportController {
                                 reportDto.setMaterialCategory(item.getMaterial().getCategory());
                                 reportDto.setWarehouseName(order.getWarehouse().getName());
                                 reportDto.setQuantity(item.getQuantity());
-                                reportDto.setDate(DateUtil.DFY_MD.format(DateUtil.fromTimeStamp(order.getStockInTime().getTime())));
+                                reportDto.setDate(DateUtil.DFY_MD.format(DateUtil.fromTimeStamp(order.getStockInTime().getTime() / 1000)));
                                 return reportDto;
                             }))
                     .collect(Collectors.toList());
