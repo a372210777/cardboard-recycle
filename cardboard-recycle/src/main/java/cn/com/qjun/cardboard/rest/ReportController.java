@@ -238,14 +238,14 @@ public class ReportController {
                                                                 @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
                                                                 @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
         DailyExpenseQueryCriteria criteria = new DailyExpenseQueryCriteria();
-        criteria.setDates(Stream.of(Timestamp.valueOf(beginDate.atStartOfDay()), Timestamp.valueOf(endDate.plusDays(1).atStartOfDay())).collect(Collectors.toList()));
+        criteria.setDates(Stream.of(Date.valueOf(beginDate), Date.valueOf(endDate)).collect(Collectors.toList()));
         criteria.setCategory(category);
         List<DailyExpenseDto> dailyExpenseDtos = dailyExpenseService.queryAll(criteria);
         Map<ExpenseReportDto, Double> grouped = dailyExpenseDtos.stream()
                 .collect(Collectors.groupingBy(dto -> {
                             ExpenseReportDto reportDto = new ExpenseReportDto();
                             reportDto.setCategory(dto.getCategory());
-                            reportDto.setDate(DateUtil.DFY_MD.format(dto.getDate().toLocalDateTime()));
+                            reportDto.setDate(DateUtil.DFY_MD.format(dto.getDate().toLocalDate()));
                             return reportDto;
                         },
                         Collectors.mapping(DailyExpenseDto::getMoney,

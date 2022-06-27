@@ -16,6 +16,8 @@
 package cn.com.qjun.cardboard.service.dto;
 
 import lombok.Data;
+
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.math.BigDecimal;
 import java.io.Serializable;
@@ -39,7 +41,7 @@ public class DailyExpenseDto implements Serializable {
     private BigDecimal money;
 
     /** 开销日期 */
-    private Timestamp date;
+    private Date date;
 
     /** 备注 */
     private String remark;

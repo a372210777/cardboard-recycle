@@ -61,12 +61,12 @@ public class Statement implements Serializable {
     @ApiModelProperty(value = "对账月份", required = true)
     private Integer month;
 
+    @CreatedBy
     @Column(name = "`create_by`",nullable = false)
     @NotBlank
     @ApiModelProperty(value = "对账人", hidden = true)
     private String createBy;
 
-    @CreatedBy
     @Column(name = "`statement_time`",nullable = false)
     @NotNull
     @ApiModelProperty(value = "对账时间", required = true)

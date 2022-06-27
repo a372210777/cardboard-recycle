@@ -15,7 +15,6 @@
  */
 package cn.com.qjun.cardboard.domain;
 
-import lombok.Data;
 import cn.hutool.core.bean.BeanUtil;
 import io.swagger.annotations.ApiModelProperty;
 import cn.hutool.core.bean.copier.CopyOptions;
@@ -32,6 +31,7 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.math.BigDecimal;
 import java.io.Serializable;
@@ -69,7 +69,7 @@ public class DailyExpense implements Serializable {
     @Column(name = "`date_`", nullable = false)
     @NotNull
     @ApiModelProperty(value = "开销日期", required = true)
-    private Timestamp date;
+    private Date date;
 
     @Column(name = "`remark`")
     @ApiModelProperty(value = "备注")

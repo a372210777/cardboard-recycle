@@ -48,7 +48,7 @@ import javax.servlet.http.HttpServletResponse;
 **/
 @RestController
 @RequiredArgsConstructor
-@Api(tags = "结算单管理")
+@Api(tags = "对账单管理")
 @RequestMapping("/api/statement")
 public class StatementController {
 
@@ -65,16 +65,16 @@ public class StatementController {
     }
 
     @GetMapping
-    @Log("查询结算单")
-    @ApiOperation("查询结算单")
+    @Log("查询对账单")
+    @ApiOperation("查询对账单")
     @PreAuthorize("@el.check('statement:list')")
     public ResponseEntity<Object> queryStatement(StatementItemQueryCriteria criteria, Pageable pageable){
         return new ResponseEntity<>(statementItemService.queryAll(criteria,pageable),HttpStatus.OK);
     }
 
     @PostMapping
-    @Log("新增结算单")
-    @ApiOperation("新增结算单")
+    @Log("新增对账单")
+    @ApiOperation("新增对账单")
     @PreAuthorize("@el.check('statement:add')")
     public ResponseEntity<Object> createStatement(@Validated @RequestBody Statement resources){
         if (CollectionUtils.isEmpty(resources.getStatementItems())) {
@@ -84,8 +84,8 @@ public class StatementController {
     }
 
     @GetMapping("/add")
-    @Log("新增结算单查询统计数据")
-    @ApiOperation("新增结算单查询统计数据")
+    @Log("新增对账单查询统计数据")
+    @ApiOperation("新增对账单查询统计数据")
     @PreAuthorize("@el.check('statement:add')")
     public ResponseEntity<Object> queryForAdd(@RequestParam @ApiParam(value = "年份", required = true) Integer year,
                                               @RequestParam @ApiParam(value = "月份", required = true) Integer month){
@@ -112,8 +112,8 @@ public class StatementController {
     }
 
     @PutMapping
-    @Log("修改结算单")
-    @ApiOperation("修改结算单")
+    @Log("修改对账单")
+    @ApiOperation("修改对账单")
     @PreAuthorize("@el.check('statement:edit')")
     public ResponseEntity<Object> updateStatement(@Validated @RequestBody Statement resources){
         statementService.update(resources);
@@ -121,8 +121,8 @@ public class StatementController {
     }
 
     @DeleteMapping
-    @Log("删除结算单")
-    @ApiOperation("删除结算单")
+    @Log("删除对账单")
+    @ApiOperation("删除对账单")
     @PreAuthorize("@el.check('statement:del')")
     public ResponseEntity<Object> deleteStatement(@RequestBody String[] ids) {
         statementService.deleteAll(ids);

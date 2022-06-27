@@ -19,6 +19,7 @@ import cn.com.qjun.cardboard.common.SystemConstant;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -44,11 +45,11 @@ public class DailyExpenseQueryCriteria {
      */
     @Query
     @ApiModelProperty(value = "开销日期")
-    private Timestamp date;
+    private Date date;
 
     @Query(type = Query.Type.BETWEEN, propName = "date")
     @ApiModelProperty(value = "开销日期区间，between [0] and [1]", dataType = "String")
-    private List<Timestamp> dates;
+    private List<Date> dates;
 
     @Query
     @ApiModelProperty(value = "是否已删除", hidden = true)
