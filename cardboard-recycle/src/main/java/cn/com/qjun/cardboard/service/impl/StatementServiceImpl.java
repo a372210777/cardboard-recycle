@@ -73,10 +73,17 @@ public class StatementServiceImpl implements StatementService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StatementDto create(Statement resources) {
-        resources.setId(serialNumberGenerator.generateStatementId());
-        resources.setDeleted(0);
-        resources.getStatementItems().forEach(item -> item.setStatement(resources));
-        return statementMapper.toDto(statementRepository.save(resources));
+        Statement exist = statementRepository.findOneByYearAndMonth(resources.getYear(), resources.getMonth());
+        if (exist == null) {
+            resources.setId(serialNumberGenerator.generateStatementId());
+            resources.setDeleted(0);
+            resources.getStatementItems().forEach(item -> item.setStatement(resources));
+            return statementMapper.toDto(statementRepository.save(resources));
+        } else {
+            resources.setId(exist.getId());
+            this.update(resources);
+            return statementMapper.toDto(resources);
+        }
     }
 
     @Override

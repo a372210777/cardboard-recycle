@@ -25,4 +25,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 * @date 2022-06-18
 **/
 public interface StatementRepository extends JpaRepository<Statement, String>, JpaSpecificationExecutor<Statement> {
+    Statement findOneByYearAndMonth(Integer year, Integer month);
 }

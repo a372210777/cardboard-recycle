@@ -74,7 +74,7 @@ public class StatementController {
 
     @PostMapping
     @Log("新增对账单")
-    @ApiOperation("新增对账单")
+    @ApiOperation(value = "新增对账单", notes = "如果当月已存在对账单，则更新")
     @PreAuthorize("@el.check('statement:add')")
     public ResponseEntity<Object> createStatement(@Validated @RequestBody Statement resources){
         if (CollectionUtils.isEmpty(resources.getStatementItems())) {
