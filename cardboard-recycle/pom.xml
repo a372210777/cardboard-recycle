@@ -22,11 +22,6 @@
             <artifactId>eladmin-tools</artifactId>
             <version>2.6</version>
         </dependency>
-        <dependency>
-            <groupId>me.zhengjie</groupId>
-            <artifactId>eladmin-system</artifactId>
-            <version>2.6</version>
-        </dependency>
     </dependencies>
 
 </project>

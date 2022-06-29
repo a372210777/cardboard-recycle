@@ -17,8 +17,6 @@ package cn.com.qjun.cardboard.service.impl;
 
 import cn.com.qjun.cardboard.common.SystemConstant;
 import cn.com.qjun.cardboard.domain.DailyExpense;
-import me.zhengjie.modules.system.service.DictDetailService;
-import me.zhengjie.modules.system.service.dto.DictDetailDto;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +25,7 @@ import cn.com.qjun.cardboard.service.DailyExpenseService;
 import cn.com.qjun.cardboard.service.dto.DailyExpenseDto;
 import cn.com.qjun.cardboard.service.dto.DailyExpenseQueryCriteria;
 import cn.com.qjun.cardboard.service.mapstruct.DailyExpenseMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -51,7 +50,7 @@ public class DailyExpenseServiceImpl implements DailyExpenseService {
 
     private final DailyExpenseRepository dailyExpenseRepository;
     private final DailyExpenseMapper dailyExpenseMapper;
-    private final DictDetailService dictDetailService;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public Map<String,Object> queryAll(DailyExpenseQueryCriteria criteria, Pageable pageable){
@@ -100,9 +99,9 @@ public class DailyExpenseServiceImpl implements DailyExpenseService {
 
     @Override
     public void download(List<DailyExpenseDto> all, HttpServletResponse response) throws IOException {
-        List<DictDetailDto> expenseCategories = dictDetailService.getDictByName("expense_category");
-        Map<String, String> dictMap = expenseCategories.stream()
-                .collect(Collectors.toMap(DictDetailDto::getValue, DictDetailDto::getLabel));
+        List<Map<String, Object>> dictDetails = jdbcTemplate.queryForList("select dd.`value`, dd.label from sys_dict_detail dd join sys_dict d on dd.dict_id = d.dict_id where d.`name` = 'expense_category'");
+        Map<String, String> dictMap = dictDetails.stream()
+                .collect(Collectors.toMap(map -> (String) map.get("value"), map -> (String) map.get("label")));
         List<Map<String, Object>> list = new ArrayList<>();
         for (DailyExpenseDto dailyExpense : all) {
             Map<String,Object> map = new LinkedHashMap<>();

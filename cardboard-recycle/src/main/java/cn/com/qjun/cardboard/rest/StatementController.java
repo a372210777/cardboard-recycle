@@ -15,6 +15,7 @@
 */
 package cn.com.qjun.cardboard.rest;
 
+import cn.com.qjun.cardboard.domain.StatementItem;
 import cn.com.qjun.cardboard.service.StatementItemService;
 import cn.com.qjun.cardboard.service.StockInOrderService;
 import cn.com.qjun.cardboard.service.dto.*;
@@ -117,6 +118,15 @@ public class StatementController {
     @PreAuthorize("@el.check('statement:edit')")
     public ResponseEntity<Object> updateStatement(@Validated @RequestBody Statement resources){
         statementService.update(resources);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PutMapping("/item")
+    @Log("修改对账单行项")
+    @ApiOperation("修改对账单行项")
+    @PreAuthorize("@el.check('statement:edit')")
+    public ResponseEntity<Object> updateStatementItem(@Validated @RequestBody StatementItem resources){
+        statementItemService.update(resources);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
