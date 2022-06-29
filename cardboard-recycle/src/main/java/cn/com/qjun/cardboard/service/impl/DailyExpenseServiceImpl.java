@@ -17,6 +17,8 @@ package cn.com.qjun.cardboard.service.impl;
 
 import cn.com.qjun.cardboard.common.SystemConstant;
 import cn.com.qjun.cardboard.domain.DailyExpense;
+import me.zhengjie.modules.system.service.DictDetailService;
+import me.zhengjie.modules.system.service.dto.DictDetailDto;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ import me.zhengjie.utils.QueryHelp;
 
 import java.util.*;
 import java.io.IOException;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -48,6 +51,7 @@ public class DailyExpenseServiceImpl implements DailyExpenseService {
 
     private final DailyExpenseRepository dailyExpenseRepository;
     private final DailyExpenseMapper dailyExpenseMapper;
+    private final DictDetailService dictDetailService;
 
     @Override
     public Map<String,Object> queryAll(DailyExpenseQueryCriteria criteria, Pageable pageable){
@@ -96,10 +100,13 @@ public class DailyExpenseServiceImpl implements DailyExpenseService {
 
     @Override
     public void download(List<DailyExpenseDto> all, HttpServletResponse response) throws IOException {
+        List<DictDetailDto> expenseCategories = dictDetailService.getDictByName("expense_category");
+        Map<String, String> dictMap = expenseCategories.stream()
+                .collect(Collectors.toMap(DictDetailDto::getValue, DictDetailDto::getLabel));
         List<Map<String, Object>> list = new ArrayList<>();
         for (DailyExpenseDto dailyExpense : all) {
             Map<String,Object> map = new LinkedHashMap<>();
-            map.put("开销分类", dailyExpense.getCategory());
+            map.put("开销分类", dictMap.get(dailyExpense.getCategory()));
             map.put("开销金额", dailyExpense.getMoney());
             map.put("开销日期", dailyExpense.getDate());
             map.put("备注", dailyExpense.getRemark());

@@ -15,10 +15,9 @@
  */
 package cn.com.qjun.cardboard.service.dto;
 
+import cn.com.qjun.cardboard.common.SystemConstant;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-
-import java.util.List;
 
 import me.zhengjie.annotation.Query;
 
@@ -44,4 +43,8 @@ public class StatementItemQueryCriteria {
     @Query(type = Query.Type.EQUAL, propName = "id", joinName = "material")
     @ApiModelProperty(value = "物料ID")
     private Integer materialId;
+
+    @Query(type = Query.Type.EQUAL, propName = "deleted", joinName = "statement")
+    @ApiModelProperty(value = "是否已删除", hidden = true)
+    private Integer deleted = SystemConstant.DEL_FLAG_0;
 }

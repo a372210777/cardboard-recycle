@@ -105,6 +105,7 @@ public class ReportController {
                             reportDto.setOrderType("入库");
                             return reportDto;
                         })
+                        .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
                         .collect(Collectors.toList());
                 return new ResponseEntity<>(result, HttpStatus.OK);
             }
@@ -127,6 +128,7 @@ public class ReportController {
                                     DateUtil.DFY_MD.format(endDate)));
                             return reportDto;
                         })
+                        .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
                         .collect(Collectors.toList());
                 return new ResponseEntity<>(result, HttpStatus.OK);
             }
@@ -173,6 +175,7 @@ public class ReportController {
                             reportDto.setOrderType("出库");
                             return reportDto;
                         })
+                        .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
                         .collect(Collectors.toList());
                 return new ResponseEntity<>(result, HttpStatus.OK);
             }
@@ -195,6 +198,7 @@ public class ReportController {
                                     DateUtil.DFY_MD.format(endDate)));
                             return reportDto;
                         })
+                        .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
                         .collect(Collectors.toList());
                 return new ResponseEntity<>(result, HttpStatus.OK);
             }
