@@ -130,6 +130,15 @@ public class StatementController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @DeleteMapping("/item")
+    @Log("删除对账单行项")
+    @ApiOperation("删除对账单行项")
+    @PreAuthorize("@el.check('statement:del')")
+    public ResponseEntity<Object> deleteStatementItem(@RequestBody Integer[] ids){
+        statementItemService.deleteAll(ids);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
     @DeleteMapping
     @Log("删除对账单")
     @ApiOperation("删除对账单")
