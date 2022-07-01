@@ -1,6 +1,7 @@
 package cn.com.qjun.cardboard.rest;
 
 import cn.com.qjun.cardboard.common.echart.MudhChartData;
+import cn.com.qjun.cardboard.service.BasicMaterialService;
 import cn.com.qjun.cardboard.service.DailyExpenseService;
 import cn.com.qjun.cardboard.service.StockInOrderService;
 import cn.com.qjun.cardboard.service.StockOutOrderService;
@@ -49,6 +50,7 @@ public class ReportController {
     private final StockInOrderService stockInOrderService;
     private final StockOutOrderService stockOutOrderService;
     private final DailyExpenseService dailyExpenseService;
+    private final BasicMaterialService materialService;
 
     @GetMapping("/stock")
     @Log("出入库统计")
@@ -304,7 +306,11 @@ public class ReportController {
         return new ResponseEntity<>(convertMapToChartData(dataList, beginDate, endDate), HttpStatus.OK);
     }
 
-    public static MudhChartData<LocalDate, String, BigDecimal> convertMapToChartData(List<Map<String, Object>> dataList, LocalDate beginDate, LocalDate endDate) {
+    private MudhChartData<LocalDate, String, BigDecimal> convertMapToChartData(List<Map<String, Object>> dataList, LocalDate beginDate, LocalDate endDate) {
+        List<BasicMaterialDto> allMaterial = materialService.queryAll(new BasicMaterialQueryCriteria());
+        String[] materials = allMaterial.stream()
+                .map(BasicMaterialDto::getName)
+                .toArray(String[]::new);
         Map<LocalDate, Map<String, Object>> collect = dataList.stream()
                 .collect(Collectors.groupingBy(map -> ((Date) map.get("date_")).toLocalDate(),
                         Collectors.collectingAndThen(Collectors.toList(), list -> {
@@ -314,10 +320,6 @@ public class ReportController {
                             }
                             return map;
                         })));
-        String[] materials = collect.values().stream()
-                .flatMap(map -> map.keySet().stream())
-                .distinct()
-                .toArray(String[]::new);
         List<LocalDate> dateList = DateTimeUtils.generateDateSequence(beginDate, endDate.plusDays(1), Period.ofDays(1));
         List<Map<String, Object>> chartDataList = dateList.stream()
                 .map(date -> {
