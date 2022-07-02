@@ -84,4 +84,6 @@ public interface StockOutOrderService {
     void download(List<StockOutOrderDto> all, HttpServletResponse response) throws IOException;
 
     List<Map<String, Object>> groupingStatistics(LocalDate beginDate, LocalDate endDate);
+
+    List<Map<String, Object>> groupingStatisticsMoney(LocalDate beginDate, LocalDate endDate);
 }

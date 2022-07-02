@@ -17,6 +17,7 @@ import me.zhengjie.utils.DateUtil;
 import me.zhengjie.utils.FileUtil;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -85,11 +86,14 @@ public class ReportController {
                                 reportDto.setWarehouseName(order.getWarehouse().getName());
                                 reportDto.setQuantity(item.getQuantity());
                                 reportDto.setDate(DateUtil.DFY_MD.format(DateUtil.fromTimeStamp(order.getStockInTime().getTime() / 1000)));
+                                reportDto.setMoney(Optional.ofNullable(item.getUnitPrice())
+                                        .map(unitPrice -> unitPrice.multiply(BigDecimal.valueOf(item.getQuantity())))
+                                        .orElse(BigDecimal.ZERO));
                                 return reportDto;
                             }))
                     .collect(Collectors.toList());
             if ("daily".equals(reportType)) {
-                Map<StockReportDto, Integer> dateGroupedQuantity = tempResult.stream()
+                Map<StockReportDto, List<StockReportDto>> dateGroupedQuantity = tempResult.stream()
                         .collect(Collectors.groupingBy(report -> {
                                     StockReportDto key = new StockReportDto();
                                     key.setMaterialName(report.getMaterialName());
@@ -97,14 +101,17 @@ public class ReportController {
                                     key.setWarehouseName(report.getWarehouseName());
                                     key.setDate(report.getDate());
                                     return key;
-                                },
-                                Collectors.mapping(StockReportDto::getQuantity,
-                                        Collectors.summingInt(quantity -> quantity))));
+                                }));
                 List<StockReportDto> result = dateGroupedQuantity.entrySet().stream()
                         .map(entry -> {
                             StockReportDto reportDto = entry.getKey();
-                            reportDto.setQuantity(entry.getValue());
                             reportDto.setOrderType("入库");
+                            reportDto.setQuantity(entry.getValue().stream()
+                                    .map(StockReportDto::getQuantity)
+                                    .mapToInt(quantity -> quantity).sum());
+                            reportDto.setMoney(entry.getValue().stream()
+                                    .map(StockReportDto::getMoney)
+                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
                             return reportDto;
                         })
                         .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
@@ -112,22 +119,26 @@ public class ReportController {
                 return new ResponseEntity<>(result, HttpStatus.OK);
             }
             if ("summary".equals(reportType)) {
-                Map<StockReportDto, Integer> groupedQuantity = tempResult.stream()
+                Map<StockReportDto, List<StockReportDto>> groupedQuantity = tempResult.stream()
                         .collect(Collectors.groupingBy(report -> {
                                     StockReportDto key = new StockReportDto();
                                     key.setMaterialName(report.getMaterialName());
                                     key.setMaterialCategory(report.getMaterialCategory());
                                     key.setWarehouseName(report.getWarehouseName());
                                     return key;
-                                },
-                                Collectors.mapping(StockReportDto::getQuantity,
-                                        Collectors.summingInt(quantity -> quantity))));
+                                }));
                 List<StockReportDto> result = groupedQuantity.entrySet().stream()
                         .map(entry -> {
                             StockReportDto reportDto = entry.getKey();
-                            reportDto.setQuantity(entry.getValue());
+                            reportDto.setOrderType("入库");
                             reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate),
                                     DateUtil.DFY_MD.format(endDate)));
+                            reportDto.setQuantity(entry.getValue().stream()
+                                    .map(StockReportDto::getQuantity)
+                                    .mapToInt(quantity -> quantity).sum());
+                            reportDto.setMoney(entry.getValue().stream()
+                                    .map(StockReportDto::getMoney)
+                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
                             return reportDto;
                         })
                         .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
@@ -155,11 +166,21 @@ public class ReportController {
                                 reportDto.setWarehouseName(order.getWarehouse().getName());
                                 reportDto.setQuantity(item.getQuantity());
                                 reportDto.setDate(DateUtil.DFY_MD.format(DateUtil.fromTimeStamp(order.getStockOutTime().getTime() / 1000)));
+                                BigDecimal money = BigDecimal.ZERO;
+                                if (item.getMaterial().getCategory().equals("paper")) {
+                                    double totalWeight = item.getQualityCheckCerts().stream()
+                                            .map(QualityCheckCertDto::getActualWeight)
+                                            .mapToDouble(w -> w).sum();
+                                    money = item.getUnitPrice().multiply(BigDecimal.valueOf(totalWeight));
+                                } else {
+                                    money = item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+                                }
+                                reportDto.setMoney(money);
                                 return reportDto;
                             }))
                     .collect(Collectors.toList());
             if ("daily".equals(reportType)) {
-                Map<StockReportDto, Integer> dateGroupedQuantity = tempResult.stream()
+                Map<StockReportDto, List<StockReportDto>> dateGroupedQuantity = tempResult.stream()
                         .collect(Collectors.groupingBy(report -> {
                                     StockReportDto key = new StockReportDto();
                                     key.setMaterialName(report.getMaterialName());
@@ -167,14 +188,17 @@ public class ReportController {
                                     key.setWarehouseName(report.getWarehouseName());
                                     key.setDate(report.getDate());
                                     return key;
-                                },
-                                Collectors.mapping(StockReportDto::getQuantity,
-                                        Collectors.summingInt(quantity -> quantity))));
+                                }));
                 List<StockReportDto> result = dateGroupedQuantity.entrySet().stream()
                         .map(entry -> {
                             StockReportDto reportDto = entry.getKey();
-                            reportDto.setQuantity(entry.getValue());
                             reportDto.setOrderType("出库");
+                            reportDto.setQuantity(entry.getValue().stream()
+                                    .map(StockReportDto::getQuantity)
+                                    .mapToInt(quantity -> quantity).sum());
+                            reportDto.setMoney(entry.getValue().stream()
+                                    .map(StockReportDto::getMoney)
+                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
                             return reportDto;
                         })
                         .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
@@ -182,22 +206,26 @@ public class ReportController {
                 return new ResponseEntity<>(result, HttpStatus.OK);
             }
             if ("summary".equals(reportType)) {
-                Map<StockReportDto, Integer> groupedQuantity = tempResult.stream()
+                Map<StockReportDto, List<StockReportDto>> groupedQuantity = tempResult.stream()
                         .collect(Collectors.groupingBy(report -> {
                                     StockReportDto key = new StockReportDto();
                                     key.setMaterialName(report.getMaterialName());
                                     key.setMaterialCategory(report.getMaterialCategory());
                                     key.setWarehouseName(report.getWarehouseName());
                                     return key;
-                                },
-                                Collectors.mapping(StockReportDto::getQuantity,
-                                        Collectors.summingInt(quantity -> quantity))));
+                                }));
                 List<StockReportDto> result = groupedQuantity.entrySet().stream()
                         .map(entry -> {
                             StockReportDto reportDto = entry.getKey();
-                            reportDto.setQuantity(entry.getValue());
                             reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate),
                                     DateUtil.DFY_MD.format(endDate)));
+                            reportDto.setOrderType("出库");
+                            reportDto.setQuantity(entry.getValue().stream()
+                                    .map(StockReportDto::getQuantity)
+                                    .mapToInt(quantity -> quantity).sum());
+                            reportDto.setMoney(entry.getValue().stream()
+                                    .map(StockReportDto::getMoney)
+                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
                             return reportDto;
                         })
                         .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
@@ -231,6 +259,7 @@ public class ReportController {
             map.put("所属仓库", reportDto.getWarehouseName());
             map.put("数量(Kg)", reportDto.getQuantity());
             map.put("统计时间", reportDto.getDate());
+            map.put("金额", reportDto.getMoney());
             list.add(map);
         }
         FileUtil.downloadExcel(list, response);
@@ -241,29 +270,53 @@ public class ReportController {
     @ApiOperation("开销统计")
     @PreAuthorize("@el.check('report:expense')")
     public ResponseEntity<List<ExpenseReportDto>> expenseReport(@RequestParam(required = false) @ApiParam("开销种类") String category,
+                                                                @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType,
                                                                 @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
                                                                 @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
         DailyExpenseQueryCriteria criteria = new DailyExpenseQueryCriteria();
         criteria.setDates(Stream.of(Date.valueOf(beginDate), Date.valueOf(endDate)).collect(Collectors.toList()));
         criteria.setCategory(category);
         List<DailyExpenseDto> dailyExpenseDtos = dailyExpenseService.queryAll(criteria);
-        Map<ExpenseReportDto, Double> grouped = dailyExpenseDtos.stream()
-                .collect(Collectors.groupingBy(dto -> {
-                            ExpenseReportDto reportDto = new ExpenseReportDto();
-                            reportDto.setCategory(dto.getCategory());
-                            reportDto.setDate(DateUtil.DFY_MD.format(dto.getDate().toLocalDate()));
-                            return reportDto;
-                        },
-                        Collectors.mapping(DailyExpenseDto::getMoney,
-                                Collectors.summingDouble(BigDecimal::doubleValue))));
-        List<ExpenseReportDto> result = grouped.entrySet().stream()
-                .map(entry -> {
-                    ExpenseReportDto reportDto = entry.getKey();
-                    reportDto.setMoney(BigDecimal.valueOf(entry.getValue()));
-                    return reportDto;
-                })
-                .collect(Collectors.toList());
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        if ("daily".equals(reportType)) {
+            Map<ExpenseReportDto, Double> grouped = dailyExpenseDtos.stream()
+                    .collect(Collectors.groupingBy(dto -> {
+                                ExpenseReportDto reportDto = new ExpenseReportDto();
+                                reportDto.setCategory(dto.getCategory());
+                                reportDto.setDate(DateUtil.DFY_MD.format(dto.getDate().toLocalDate()));
+                                return reportDto;
+                            },
+                            Collectors.mapping(DailyExpenseDto::getMoney,
+                                    Collectors.summingDouble(BigDecimal::doubleValue))));
+            List<ExpenseReportDto> result = grouped.entrySet().stream()
+                    .map(entry -> {
+                        ExpenseReportDto reportDto = entry.getKey();
+                        reportDto.setMoney(BigDecimal.valueOf(entry.getValue()));
+                        return reportDto;
+                    })
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        }
+        if ("summary".equals(reportType)) {
+            Map<ExpenseReportDto, Double> grouped = dailyExpenseDtos.stream()
+                    .collect(Collectors.groupingBy(dto -> {
+                                ExpenseReportDto reportDto = new ExpenseReportDto();
+                                reportDto.setCategory(dto.getCategory());
+                                return reportDto;
+                            },
+                            Collectors.mapping(DailyExpenseDto::getMoney,
+                                    Collectors.summingDouble(BigDecimal::doubleValue))));
+            List<ExpenseReportDto> result = grouped.entrySet().stream()
+                    .map(entry -> {
+                        ExpenseReportDto reportDto = entry.getKey();
+                        reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate),
+                                DateUtil.DFY_MD.format(endDate)));
+                        reportDto.setMoney(BigDecimal.valueOf(entry.getValue()));
+                        return reportDto;
+                    })
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        }
+        throw new IllegalArgumentException("参数错误");
     }
 
     @Log("开销统计导出")
@@ -272,9 +325,10 @@ public class ReportController {
     @PreAuthorize("@el.check('report:expense')")
     public void exportExpenseReport(HttpServletResponse response,
                                     @RequestParam(required = false) @ApiParam("开销种类") String category,
+                                    @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType,
                                     @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
                                     @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) throws IOException {
-        ResponseEntity<List<ExpenseReportDto>> responseEntity = expenseReport(category, beginDate, endDate);
+        ResponseEntity<List<ExpenseReportDto>> responseEntity = expenseReport(category, reportType, beginDate, endDate);
         List<Map<String, Object>> list = new ArrayList<>();
         for (ExpenseReportDto reportDto : Objects.requireNonNull(responseEntity.getBody())) {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -301,8 +355,18 @@ public class ReportController {
     @GetMapping(value = "/chart/stockOut")
     @PreAuthorize("@el.check('report:chart:stockOut')")
     public ResponseEntity<MudhChartData> stockOutChart(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") @ApiParam(value = "统计开始日期", required = true) LocalDate beginDate,
-                                                      @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") @ApiParam(value = "统计结束日期", required = true) LocalDate endDate) {
+                                                       @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") @ApiParam(value = "统计结束日期", required = true) LocalDate endDate) {
         List<Map<String, Object>> dataList = stockOutOrderService.groupingStatistics(beginDate, endDate.plusDays(1));
+        return new ResponseEntity<>(convertMapToChartData(dataList, beginDate, endDate), HttpStatus.OK);
+    }
+
+    @Log("出库金额统计图")
+    @ApiOperation("出库金额统计图")
+    @GetMapping(value = "/chart/stockOutMoney")
+    @PreAuthorize("@el.check('report:chart:stockOutMoney')")
+    public ResponseEntity<MudhChartData> stockOutMoneyChart(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") @ApiParam(value = "统计开始日期", required = true) LocalDate beginDate,
+                                                            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") @ApiParam(value = "统计结束日期", required = true) LocalDate endDate) {
+        List<Map<String, Object>> dataList = stockOutOrderService.groupingStatisticsMoney(beginDate, endDate.plusDays(1));
         return new ResponseEntity<>(convertMapToChartData(dataList, beginDate, endDate), HttpStatus.OK);
     }
 
@@ -316,7 +380,10 @@ public class ReportController {
                         Collectors.collectingAndThen(Collectors.toList(), list -> {
                             Map<String, Object> map = new HashMap<>();
                             for (Map<String, Object> item : list) {
-                                map.put((String) item.get("material"), item.get("quantity"));
+                                map.put((String) item.get("material"),
+                                        Optional.ofNullable(item.get("quantity"))
+                                                .map(obj -> new BigDecimal(obj.toString()))
+                                                .orElse(null));
                             }
                             return map;
                         })));

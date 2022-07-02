@@ -16,6 +16,8 @@
 package cn.com.qjun.cardboard.service.impl;
 
 import cn.com.qjun.cardboard.domain.StatementItem;
+import cn.com.qjun.cardboard.domain.StockInOrderItem;
+import cn.com.qjun.cardboard.repository.StockInOrderItemRepository;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
@@ -30,12 +32,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import me.zhengjie.utils.PageUtil;
 import me.zhengjie.utils.QueryHelp;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 /**
 * @website https://el-admin.vip
@@ -49,6 +49,7 @@ public class StatementItemServiceImpl implements StatementItemService {
 
     private final StatementItemRepository statementItemRepository;
     private final StatementItemMapper statementItemMapper;
+    private final StockInOrderItemRepository stockInOrderItemRepository;
 
     @Override
     public Map<String,Object> queryAll(StatementItemQueryCriteria criteria, Pageable pageable){
@@ -82,6 +83,11 @@ public class StatementItemServiceImpl implements StatementItemService {
         ValidationUtil.isNull( statementItem.getId(),"StatementItem","id",resources.getId());
         statementItem.copy(resources);
         statementItemRepository.save(statementItem);
+        List<StockInOrderItem> stockInOrderItems = stockInOrderItemRepository.findByMonthAndMaterials(statementItem.getStatement().getYear(), statementItem.getStatement().getMonth(), Collections.singleton(statementItem.getMaterial().getId()));
+        for (StockInOrderItem stockInOrderItem : stockInOrderItems) {
+            stockInOrderItem.setUnitPrice(resources.getPurchasePrice());
+        }
+        stockInOrderItemRepository.saveAll(stockInOrderItems);
     }
 
     @Override

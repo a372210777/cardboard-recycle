@@ -17,6 +17,8 @@ package cn.com.qjun.cardboard.service.impl;
 
 import cn.com.qjun.cardboard.common.SystemConstant;
 import cn.com.qjun.cardboard.domain.Statement;
+import cn.com.qjun.cardboard.domain.StockInOrderItem;
+import cn.com.qjun.cardboard.repository.StockInOrderItemRepository;
 import cn.com.qjun.cardboard.service.dto.StatementQueryCriteria;
 import cn.com.qjun.cardboard.utils.SerialNumberGenerator;
 import me.zhengjie.utils.ValidationUtil;
@@ -26,6 +28,7 @@ import cn.com.qjun.cardboard.repository.StatementRepository;
 import cn.com.qjun.cardboard.service.StatementService;
 import cn.com.qjun.cardboard.service.dto.StatementDto;
 import cn.com.qjun.cardboard.service.mapstruct.StatementMapper;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -33,8 +36,10 @@ import org.springframework.data.domain.Pageable;
 import me.zhengjie.utils.PageUtil;
 import me.zhengjie.utils.QueryHelp;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.io.IOException;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -50,6 +55,7 @@ public class StatementServiceImpl implements StatementService {
     private final StatementRepository statementRepository;
     private final StatementMapper statementMapper;
     private final SerialNumberGenerator serialNumberGenerator;
+    private final StockInOrderItemRepository stockInOrderItemRepository;
 
     @Override
     public Map<String,Object> queryAll(StatementQueryCriteria criteria, Pageable pageable){
@@ -74,16 +80,25 @@ public class StatementServiceImpl implements StatementService {
     @Transactional(rollbackFor = Exception.class)
     public StatementDto create(Statement resources) {
         Statement exist = statementRepository.findOneByYearAndMonth(resources.getYear(), resources.getMonth());
+        StatementDto result;
         if (exist == null) {
             resources.setId(serialNumberGenerator.generateStatementId());
             resources.setDeleted(0);
             resources.getStatementItems().forEach(item -> item.setStatement(resources));
-            return statementMapper.toDto(statementRepository.save(resources));
+            result = statementMapper.toDto(statementRepository.save(resources));
         } else {
             resources.setId(exist.getId());
             this.update(resources);
-            return statementMapper.toDto(resources);
+            result = statementMapper.toDto(resources);
         }
+        Map<Integer, BigDecimal> materialIdUnitPriceMap = resources.getStatementItems().stream()
+                .map(item -> Pair.of(item.getMaterial().getId(), item.getPurchasePrice()))
+                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight, (p1, p2) -> p2));
+        List<StockInOrderItem> stockInOrderItems = stockInOrderItemRepository.findByMonthAndMaterials(result.getYear(), result.getMonth(), materialIdUnitPriceMap.keySet());
+        stockInOrderItems
+                .forEach(item -> item.setUnitPrice(materialIdUnitPriceMap.get(item.getMaterial().getId())));
+        stockInOrderItemRepository.saveAll(stockInOrderItems);
+        return result;
     }
 
     @Override

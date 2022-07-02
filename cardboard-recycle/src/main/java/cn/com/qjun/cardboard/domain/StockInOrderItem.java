@@ -24,6 +24,7 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * @author RenQiang
@@ -62,6 +63,11 @@ public class StockInOrderItem implements Serializable {
     @NotBlank
     @ApiModelProperty(value = "数量单位", required = true)
     private String unit;
+
+    @Column(name = "`unit_price`", nullable = false)
+    @NotNull
+    @ApiModelProperty(value = "采购单价", required = true)
+    private BigDecimal unitPrice = BigDecimal.ZERO;
 
     @Column(name = "`remark`")
     @ApiModelProperty(value = "备注")

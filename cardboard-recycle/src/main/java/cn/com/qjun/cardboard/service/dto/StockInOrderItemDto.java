@@ -17,6 +17,7 @@ package cn.com.qjun.cardboard.service.dto;
 
 import lombok.Data;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
 * @website https://el-admin.vip
@@ -42,6 +43,11 @@ public class StockInOrderItemDto implements Serializable {
 
     /** 数量单位 */
     private String unit;
+
+    /**
+     * 采购单价
+     */
+    private BigDecimal unitPrice = BigDecimal.ZERO;
 
     /** 备注 */
     private String remark;

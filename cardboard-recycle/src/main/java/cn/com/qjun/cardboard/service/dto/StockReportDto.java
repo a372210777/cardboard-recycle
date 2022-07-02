@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * @author RenQiang
@@ -31,4 +32,6 @@ public class StockReportDto implements Serializable {
     private String date;
     @ApiModelProperty(value = "订单类型")
     private String orderType;
+    @ApiModelProperty(value = "金额")
+    private BigDecimal money;
 }

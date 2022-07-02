@@ -132,4 +132,9 @@ public class StockOutOrderServiceImpl implements StockOutOrderService {
     public List<Map<String, Object>> groupingStatistics(LocalDate beginDate, LocalDate endDate) {
         return stockOutOrderRepository.groupingStatistics(beginDate, endDate);
     }
+
+    @Override
+    public List<Map<String, Object>> groupingStatisticsMoney(LocalDate beginDate, LocalDate endDate) {
+        return stockOutOrderRepository.groupingStatisticsMoney(beginDate, endDate);
+    }
 }

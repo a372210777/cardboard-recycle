@@ -18,6 +18,10 @@ package cn.com.qjun.cardboard.repository;
 import cn.com.qjun.cardboard.domain.StockInOrderItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
+import java.util.Set;
 
 /**
 * @website https://el-admin.vip
@@ -25,4 +29,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 * @date 2022-06-18
 **/
 public interface StockInOrderItemRepository extends JpaRepository<StockInOrderItem, Integer>, JpaSpecificationExecutor<StockInOrderItem> {
+    @Query(value = "from StockInOrderItem oi where year(oi.stockInOrder.stockInTime) = ?1 and month(oi.stockInOrder.stockInTime) = ?2 and oi.material.id in ?3")
+    List<StockInOrderItem> findByMonthAndMaterials(Integer year, Integer month, Set<Integer> materialIds);
 }
