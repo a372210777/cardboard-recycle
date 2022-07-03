@@ -31,6 +31,6 @@ import java.util.Map;
 * @date 2022-06-18
 **/
 public interface StockInOrderRepository extends JpaRepository<StockInOrder, String>, JpaSpecificationExecutor<StockInOrder> {
-    @Query(value = "select date(o.stock_in_time) as date_, m.name_ as material, sum(oi.quantity) as quantity from biz_stock_in_order o join biz_stock_in_order_item oi on o.id = oi.stock_in_order_id join basic_material m on oi.material_id = m.id where o.stock_in_time between ?1 and ?2 group by date(o.stock_in_time), oi.material_id", nativeQuery = true)
+    @Query(value = "select date(o.stock_in_time) as date_, m.name_ as material, sum(oi.quantity) as quantity from biz_stock_in_order o join biz_stock_in_order_item oi on o.id = oi.stock_in_order_id join basic_material m on oi.material_id = m.id where o.stock_in_time between ?1 and ?2 and o.deleted = 0 group by date(o.stock_in_time), oi.material_id", nativeQuery = true)
     List<Map<String, Object>> groupingStatistics(LocalDate beginDate, LocalDate endDate);
 }
