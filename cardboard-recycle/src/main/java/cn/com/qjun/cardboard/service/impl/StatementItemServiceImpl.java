@@ -17,6 +17,7 @@ package cn.com.qjun.cardboard.service.impl;
 
 import cn.com.qjun.cardboard.domain.StatementItem;
 import cn.com.qjun.cardboard.domain.StockInOrderItem;
+import cn.com.qjun.cardboard.repository.StatementRepository;
 import cn.com.qjun.cardboard.repository.StockInOrderItemRepository;
 import me.zhengjie.utils.ValidationUtil;
 import me.zhengjie.utils.FileUtil;
@@ -50,6 +51,7 @@ public class StatementItemServiceImpl implements StatementItemService {
     private final StatementItemRepository statementItemRepository;
     private final StatementItemMapper statementItemMapper;
     private final StockInOrderItemRepository stockInOrderItemRepository;
+    private final StatementRepository statementRepository;
 
     @Override
     public Map<String,Object> queryAll(StatementItemQueryCriteria criteria, Pageable pageable){
@@ -95,6 +97,7 @@ public class StatementItemServiceImpl implements StatementItemService {
         for (Integer id : ids) {
             statementItemRepository.deleteById(id);
         }
+        statementRepository.deleteEmpty();
     }
 
     @Override

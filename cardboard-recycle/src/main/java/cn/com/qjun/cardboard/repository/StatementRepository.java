@@ -18,6 +18,7 @@ package cn.com.qjun.cardboard.repository;
 import cn.com.qjun.cardboard.domain.Statement;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 
 /**
 * @website https://el-admin.vip
@@ -26,4 +27,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 **/
 public interface StatementRepository extends JpaRepository<Statement, String>, JpaSpecificationExecutor<Statement> {
     Statement findOneByYearAndMonth(Integer year, Integer month);
+
+    @Query(value = "delete s from biz_statement s left join biz_statement_item si on s.id = si.statement_id where si.id is null", nativeQuery = true)
+    void deleteEmpty();
 }
