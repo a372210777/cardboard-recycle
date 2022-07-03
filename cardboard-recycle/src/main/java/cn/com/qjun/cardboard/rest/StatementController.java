@@ -92,7 +92,7 @@ public class StatementController {
                                               @RequestParam @ApiParam(value = "月份", required = true) Integer month){
         StockInOrderQueryCriteria criteria = new StockInOrderQueryCriteria();
         LocalDateTime beginTime = LocalDate.of(year, month, 1).atStartOfDay();
-        LocalDateTime endTime = beginTime.plusMonths(1);
+        LocalDateTime endTime = beginTime.plusMonths(1).minusSeconds(1);
         criteria.setStockInTime(Stream.of(Timestamp.valueOf(beginTime), Timestamp.valueOf(endTime))
                 .collect(Collectors.toList()));
         List<StockInOrderDto> stockInOrderDtos = stockInOrderService.queryAll(criteria);

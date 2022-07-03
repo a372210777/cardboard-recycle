@@ -63,7 +63,8 @@ public class StockOutOrderServiceImpl implements StockOutOrderService {
 
     @Override
     public List<StockOutOrderDto> queryAll(StockOutOrderQueryCriteria criteria) {
-        return stockOutOrderMapper.toDto(stockOutOrderRepository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root, criteria, criteriaBuilder)));
+        List<StockOutOrder> all = stockOutOrderRepository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root, criteria, criteriaBuilder));
+        return stockOutOrderMapper.toDto(new ArrayList<>(new HashSet<>(all)));
     }
 
     @Override
@@ -77,7 +78,8 @@ public class StockOutOrderServiceImpl implements StockOutOrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StockOutOrderDto create(StockOutOrder resources) {
-        resources.setId(serialNumberGenerator.generateStockOutOrderId());
+        LocalDate date = resources.getStockOutTime().toLocalDateTime().toLocalDate();
+        resources.setId(serialNumberGenerator.generateStockOutOrderId(date));
         resources.setDeleted(SystemConstant.DEL_FLAG_0);
         if (CollectionUtils.isNotEmpty(resources.getOrderItems())) {
             for (StockOutOrderItem orderItem : resources.getOrderItems()) {

@@ -64,7 +64,7 @@ public class ReportController {
                                                             @RequestParam(required = false) Integer materialId,
                                                             @RequestParam @ApiParam("订单类型：stockIn-入库 stockOut-出库") String orderType,
                                                             @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType) {
-        List<Timestamp> duration = Stream.of(Timestamp.valueOf(beginDate.atStartOfDay()), Timestamp.valueOf(endDate.plusDays(1).atStartOfDay()))
+        List<Timestamp> duration = Stream.of(Timestamp.valueOf(beginDate.atStartOfDay()), Timestamp.valueOf(endDate.plusDays(1).atStartOfDay().minusSeconds(1)))
                 .collect(Collectors.toList());
         if ("stockIn".equals(orderType)) {
             StockInOrderQueryCriteria criteria = new StockInOrderQueryCriteria();
@@ -166,7 +166,7 @@ public class ReportController {
                                 reportDto.setWarehouseName(order.getWarehouse().getName());
                                 reportDto.setQuantity(item.getQuantity());
                                 reportDto.setDate(DateUtil.DFY_MD.format(DateUtil.fromTimeStamp(order.getStockOutTime().getTime() / 1000)));
-                                BigDecimal money = BigDecimal.ZERO;
+                                BigDecimal money;
                                 if (item.getMaterial().getCategory().equals("paper")) {
                                     double totalWeight = item.getQualityCheckCerts().stream()
                                             .map(QualityCheckCertDto::getActualWeight)

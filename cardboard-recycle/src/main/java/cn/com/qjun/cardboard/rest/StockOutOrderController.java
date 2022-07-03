@@ -23,9 +23,9 @@ import cn.com.qjun.cardboard.service.StockOutOrderService;
 import cn.com.qjun.cardboard.service.dto.StockOutOrderQueryCriteria;
 import me.zhengjie.exception.BadRequestException;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.annotations.*;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -54,8 +55,8 @@ public class StockOutOrderController {
     @Log("生成出库单号")
     @ApiOperation("生成出库单号")
     @PreAuthorize("@el.check('stockOutOrder:add')")
-    public ResponseEntity<String> generateOrderId() {
-        return new ResponseEntity<>(serialNumberGenerator.generateStockOutOrderId(), HttpStatus.OK);
+    public ResponseEntity<String> generateOrderId(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+        return new ResponseEntity<>(serialNumberGenerator.generateStockOutOrderId(date), HttpStatus.OK);
     }
 
     @Log("导出数据")

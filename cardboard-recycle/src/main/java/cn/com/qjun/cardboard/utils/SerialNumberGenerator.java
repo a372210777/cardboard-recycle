@@ -36,36 +36,36 @@ public class SerialNumberGenerator {
 
     private final RedisUtils redisUtils;
 
-    public String generateStockInOrderId() {
-        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_STOCK_IN_ORDER, SERIAL_NUMBER_PREFIX_STOCK_IN_ORDER);
+    public String generateStockInOrderId(LocalDate date) {
+        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_STOCK_IN_ORDER, SERIAL_NUMBER_PREFIX_STOCK_IN_ORDER, date);
     }
 
-    public String generateStockOutOrderId() {
-        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_STOCK_OUT_ORDER, SERIAL_NUMBER_PREFIX_STOCK_OUT_ORDER);
+    public String generateStockOutOrderId(LocalDate date) {
+        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_STOCK_OUT_ORDER, SERIAL_NUMBER_PREFIX_STOCK_OUT_ORDER, date);
     }
 
-    public String generateQuantityCheckCertId() {
-        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_QUALITY_CHECK, SERIAL_NUMBER_PREFIX_QUALITY_CHECK);
+    public String generateQuantityCheckCertId(LocalDate date) {
+        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_QUALITY_CHECK, SERIAL_NUMBER_PREFIX_QUALITY_CHECK, date);
     }
 
-    public String generateWaybillId() {
-        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_WAYBILL, SERIAL_NUMBER_PREFIX_WAYBILL);
+    public String generateWaybillId(LocalDate date) {
+        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_WAYBILL, SERIAL_NUMBER_PREFIX_WAYBILL, date);
     }
 
-    public String generateStatementId() {
-        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_STATEMENT, SERIAL_NUMBER_PREFIX_STATEMENT);
+    public String generateStatementId(LocalDate date) {
+        return generateSerialNumber(SERIAL_NUMBER_HASH_ITEM_STATEMENT, SERIAL_NUMBER_PREFIX_STATEMENT, date);
     }
 
-    private String generateSerialNumber(String hashItem, String prefix) {
-        double incrResult = redisUtils.hincr(getRedisHashKey(), hashItem, 1);
+    private String generateSerialNumber(String hashItem, String prefix, LocalDate date) {
+        double incrResult = redisUtils.hincr(getRedisHashKey(date), hashItem, 1);
         int serialNumber = Double.valueOf(incrResult).intValue();
         if (serialNumber == 1) {
-            redisUtils.expire(getRedisHashKey(), 1, TimeUnit.DAYS);
+            redisUtils.expire(getRedisHashKey(date), 1, TimeUnit.DAYS);
         }
-        return String.format("%s-%s-%06d", prefix, LocalDate.now().format(DATE_FORMATTER), serialNumber);
+        return String.format("%s-%s-%06d", prefix, date.format(DATE_FORMATTER), serialNumber);
     }
 
-    private static String getRedisHashKey() {
-        return String.format("%s:%s", SERIAL_NUMBER_HASH_KEY, LocalDate.now().format(DATE_FORMATTER));
+    private static String getRedisHashKey(LocalDate date) {
+        return String.format("%s:%s", SERIAL_NUMBER_HASH_KEY, date.format(DATE_FORMATTER));
     }
 }

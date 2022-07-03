@@ -62,7 +62,8 @@ public class StockInOrderServiceImpl implements StockInOrderService {
 
     @Override
     public List<StockInOrderDto> queryAll(StockInOrderQueryCriteria criteria){
-        return stockInOrderMapper.toDto(stockInOrderRepository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root,criteria,criteriaBuilder)));
+        List<StockInOrder> all = stockInOrderRepository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root, criteria, criteriaBuilder));
+        return stockInOrderMapper.toDto(new ArrayList<>(new HashSet<>(all)));
     }
 
     @Override
@@ -76,7 +77,8 @@ public class StockInOrderServiceImpl implements StockInOrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StockInOrderDto create(StockInOrder resources) {
-        resources.setId(serialNumberGenerator.generateStockInOrderId());
+        LocalDate date = resources.getStockInTime().toLocalDateTime().toLocalDate();
+        resources.setId(serialNumberGenerator.generateStockInOrderId(date));
         resources.setDeleted(SystemConstant.DEL_FLAG_0);
         resources.getOrderItems()
                 .forEach(item -> item.setStockInOrder(resources));

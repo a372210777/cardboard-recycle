@@ -37,6 +37,7 @@ import me.zhengjie.utils.PageUtil;
 import me.zhengjie.utils.QueryHelp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -82,7 +83,8 @@ public class StatementServiceImpl implements StatementService {
         Statement exist = statementRepository.findOneByYearAndMonth(resources.getYear(), resources.getMonth());
         StatementDto result;
         if (exist == null) {
-            resources.setId(serialNumberGenerator.generateStatementId());
+            LocalDate date = resources.getStatementTime().toLocalDateTime().toLocalDate();
+            resources.setId(serialNumberGenerator.generateStatementId(date));
             resources.setDeleted(0);
             resources.getStatementItems().forEach(item -> item.setStatement(resources));
             result = statementMapper.toDto(statementRepository.save(resources));
