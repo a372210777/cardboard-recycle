@@ -1,20 +1,21 @@
 /*
-*  Copyright 2019-2020 Zheng Jie
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*  http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-*/
+ *  Copyright 2019-2020 Zheng Jie
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package cn.com.qjun.cardboard.service.impl;
 
+import cn.com.qjun.cardboard.domain.Statement;
 import cn.com.qjun.cardboard.domain.StatementItem;
 import cn.com.qjun.cardboard.domain.StockInOrderItem;
 import cn.com.qjun.cardboard.repository.StatementRepository;
@@ -34,16 +35,19 @@ import org.springframework.data.domain.Pageable;
 import me.zhengjie.utils.PageUtil;
 import me.zhengjie.utils.QueryHelp;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.io.IOException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
 /**
-* @website https://el-admin.vip
-* @description 服务实现
-* @author RenQiang
-* @date 2022-06-18
-**/
+ * @author RenQiang
+ * @website https://el-admin.vip
+ * @description 服务实现
+ * @date 2022-06-18
+ **/
 @Service
 @RequiredArgsConstructor
 public class StatementItemServiceImpl implements StatementItemService {
@@ -54,21 +58,21 @@ public class StatementItemServiceImpl implements StatementItemService {
     private final StatementRepository statementRepository;
 
     @Override
-    public Map<String,Object> queryAll(StatementItemQueryCriteria criteria, Pageable pageable){
-        Page<StatementItem> page = statementItemRepository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root,criteria,criteriaBuilder),pageable);
+    public Map<String, Object> queryAll(StatementItemQueryCriteria criteria, Pageable pageable) {
+        Page<StatementItem> page = statementItemRepository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root, criteria, criteriaBuilder), pageable);
         return PageUtil.toPage(page.map(statementItemMapper::toDto));
     }
 
     @Override
-    public List<StatementItemDto> queryAll(StatementItemQueryCriteria criteria){
-        return statementItemMapper.toDto(statementItemRepository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root,criteria,criteriaBuilder)));
+    public List<StatementItemDto> queryAll(StatementItemQueryCriteria criteria) {
+        return statementItemMapper.toDto(statementItemRepository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root, criteria, criteriaBuilder)));
     }
 
     @Override
     @Transactional
     public StatementItemDto findById(Integer id) {
         StatementItem statementItem = statementItemRepository.findById(id).orElseGet(StatementItem::new);
-        ValidationUtil.isNull(statementItem.getId(),"StatementItem","id",id);
+        ValidationUtil.isNull(statementItem.getId(), "StatementItem", "id", id);
         return statementItemMapper.toDto(statementItem);
     }
 
@@ -82,7 +86,7 @@ public class StatementItemServiceImpl implements StatementItemService {
     @Transactional(rollbackFor = Exception.class)
     public void update(StatementItem resources) {
         StatementItem statementItem = statementItemRepository.findById(resources.getId()).orElseGet(StatementItem::new);
-        ValidationUtil.isNull( statementItem.getId(),"StatementItem","id",resources.getId());
+        ValidationUtil.isNull(statementItem.getId(), "StatementItem", "id", resources.getId());
         statementItem.copy(resources);
         statementItemRepository.save(statementItem);
         List<StockInOrderItem> stockInOrderItems = stockInOrderItemRepository.findByMonthAndMaterials(statementItem.getStatement().getYear(), statementItem.getStatement().getMonth(), Collections.singleton(statementItem.getMaterial().getId()));
@@ -93,18 +97,39 @@ public class StatementItemServiceImpl implements StatementItemService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteAll(Integer[] ids) {
-        for (Integer id : ids) {
-            statementItemRepository.deleteById(id);
+        List<StatementItem> allById = statementItemRepository.findAllById(Arrays.asList(ids));
+        Map<String, Statement> statementIdMap = allById.stream()
+                .map(StatementItem::getStatement)
+                .collect(Collectors.toMap(Statement::getId, Function.identity(), (a, b) -> a));
+        for (Statement statement : statementIdMap.values()) {
+            List<StatementItem> needDeleteItems = statement.getStatementItems().stream()
+                    .filter(item -> Arrays.stream(ids).anyMatch(id -> item.getId().equals(id)))
+                    .collect(Collectors.toList());
+            for (StatementItem statementItem : needDeleteItems) {
+                List<StockInOrderItem> stockInOrderItems = stockInOrderItemRepository.findByMonthAndMaterials(statementItem.getStatement().getYear(), statementItem.getStatement().getMonth(), Collections.singleton(statementItem.getMaterial().getId()));
+                for (StockInOrderItem stockInOrderItem : stockInOrderItems) {
+                    stockInOrderItem.setUnitPrice(BigDecimal.ZERO);
+                }
+                stockInOrderItemRepository.saveAll(stockInOrderItems);
+                boolean remove = statement.getStatementItems().remove(statementItem);
+                assert remove;
+            }
+
+            if (statement.getStatementItems().isEmpty()) {
+                statementRepository.delete(statement);
+            } else {
+                statementRepository.save(statement);
+            }
         }
-        statementRepository.deleteEmpty();
     }
 
     @Override
     public void download(List<StatementItemDto> all, HttpServletResponse response) throws IOException {
         List<Map<String, Object>> list = new ArrayList<>();
         for (StatementItemDto statementItem : all) {
-            Map<String,Object> map = new LinkedHashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("数量", statementItem.getQuantity());
             map.put("采购单价", statementItem.getPurchasePrice());
             map.put("合计金额", statementItem.getTotalAmount());
