@@ -19,9 +19,10 @@ import cn.com.qjun.cardboard.common.SystemConstant;
 import cn.com.qjun.cardboard.domain.StockOutOrder;
 import cn.com.qjun.cardboard.domain.StockOutOrderItem;
 import cn.com.qjun.cardboard.domain.Waybill;
+import cn.com.qjun.cardboard.service.dto.StockReportDto;
 import cn.com.qjun.cardboard.utils.SerialNumberGenerator;
-import me.zhengjie.utils.ValidationUtil;
-import me.zhengjie.utils.FileUtil;
+import com.google.common.collect.Lists;
+import me.zhengjie.utils.*;
 import lombok.RequiredArgsConstructor;
 import cn.com.qjun.cardboard.repository.StockOutOrderRepository;
 import cn.com.qjun.cardboard.service.StockOutOrderService;
@@ -29,14 +30,14 @@ import cn.com.qjun.cardboard.service.dto.StockOutOrderDto;
 import cn.com.qjun.cardboard.service.dto.StockOutOrderQueryCriteria;
 import cn.com.qjun.cardboard.service.mapstruct.StockOutOrderMapper;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import me.zhengjie.utils.PageUtil;
-import me.zhengjie.utils.QueryHelp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
@@ -54,6 +55,7 @@ public class StockOutOrderServiceImpl implements StockOutOrderService {
     private final StockOutOrderRepository stockOutOrderRepository;
     private final StockOutOrderMapper stockOutOrderMapper;
     private final SerialNumberGenerator serialNumberGenerator;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public Map<String, Object> queryAll(StockOutOrderQueryCriteria criteria, Pageable pageable) {
@@ -138,5 +140,50 @@ public class StockOutOrderServiceImpl implements StockOutOrderService {
     @Override
     public List<Map<String, Object>> groupingStatisticsMoney(LocalDate beginDate, LocalDate endDate) {
         return stockOutOrderRepository.groupingStatisticsMoney(beginDate, endDate);
+    }
+
+    @Override
+    public Map<String, Object> report(String reportType, StockOutOrderQueryCriteria criteria, Integer pageNumber, Integer pageSize) {
+        LocalDateTime startTime = criteria.getStockOutTime().get(0).toLocalDateTime();
+        LocalDateTime endTime = criteria.getStockOutTime().get(1).toLocalDateTime();
+        String resultSelect = String.join(" ", "select '出库' as `orderType`,",
+                "daily".equals(reportType) ? "date(o.stock_out_time) as `date`," : String.format("'%s ~ %s' as `date`, ",
+                        DateUtil.DFY_MD.format(startTime),
+                        DateUtil.DFY_MD.format(endTime)),
+                "w.name_ as `warehouseName`,", "m.name_ as `materialName`,", "dd.label as `materialCategory`,",
+                "sum(if(m.category = 'paper', qc.actual_weight, oi.quantity)) as `quantity`,",
+                "oi.unit_price * sum(if(m.category = 'paper', qc.actual_weight, oi.quantity)) as `money`");
+        String from = String.join(" ", "from biz_stock_out_order o",
+                "join basic_warehouse w on o.warehouse_id = w.id", "join biz_stock_out_order_item oi on o.id = oi.stock_out_order_id",
+                "join basic_material m on oi.material_id = m.id", "join sys_dict_detail dd on m.category = dd.`value`",
+                "left join biz_quality_check_cert qc on qc.stock_out_order_item_id = oi.id");
+        StringBuilder where = new StringBuilder("where o.deleted = 0 and o.stock_out_time between ? and ?");
+        List<Object> params = Lists.newArrayList(startTime, endTime);
+        if (criteria.getWarehouseId() != null) {
+            where.append(" and o.warehouse_id = ?");
+            params.add(criteria.getWarehouseId());
+        }
+        if (StringUtils.isNotEmpty(criteria.getMaterialCategory())) {
+            where.append(" and m.category = ?");
+            params.add(criteria.getMaterialCategory());
+        }
+        if (criteria.getMaterialId() != null) {
+            where.append(" and oi.material_id = ?");
+            params.add(criteria.getMaterialId());
+        }
+        StringBuilder group = new StringBuilder("group by w.id, m.id");
+        StringBuilder order = new StringBuilder("order by w.id, m.id");
+        if ("daily".equals(reportType)) {
+            group.insert(9, "date(o.stock_out_time), ");
+            order.insert(9, "date(o.stock_out_time), ");
+        }
+        String countSql = String.format("select count(*) from (%s) t", String.join(" ", resultSelect, from, where.toString(), group.toString()));
+        Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray());
+        String limit = "limit ?, ?";
+        params.add((pageNumber - 1) * pageSize);
+        params.add(pageSize);
+        List<StockReportDto> content = jdbcTemplate.query(String.join(" ", resultSelect, from, where.toString(), group.toString(), order.toString(), limit),
+                StockReportDto.ROW_MAPPER, params.toArray());
+        return PageUtil.toPage(content, total);
     }
 }

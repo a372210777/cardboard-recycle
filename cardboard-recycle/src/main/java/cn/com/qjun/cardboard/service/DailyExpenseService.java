@@ -80,4 +80,6 @@ public interface DailyExpenseService {
     * @throws IOException /
     */
     void download(List<DailyExpenseDto> all, HttpServletResponse response) throws IOException;
+
+    Map<String, Object> report(String reportType, DailyExpenseQueryCriteria criteria, Integer pageNumber, Integer pageSize);
 }

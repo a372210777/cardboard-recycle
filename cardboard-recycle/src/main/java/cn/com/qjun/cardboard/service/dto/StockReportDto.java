@@ -3,6 +3,7 @@ package cn.com.qjun.cardboard.service.dto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.springframework.jdbc.core.RowMapper;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -34,4 +35,16 @@ public class StockReportDto implements Serializable {
     private String orderType;
     @ApiModelProperty(value = "金额")
     private BigDecimal money;
+
+    public static final RowMapper<StockReportDto> ROW_MAPPER = (rs, rowNum) -> {
+        StockReportDto reportDto = new StockReportDto();
+        reportDto.setOrderType(rs.getString("orderType"));
+        reportDto.setDate(rs.getString("date"));
+        reportDto.setWarehouseName(rs.getString("warehouseName"));
+        reportDto.setMaterialName(rs.getString("materialName"));
+        reportDto.setMaterialCategory(rs.getString("materialCategory"));
+        reportDto.setQuantity(rs.getInt("quantity"));
+        reportDto.setMoney(rs.getBigDecimal("money"));
+        return reportDto;
+    };
 }

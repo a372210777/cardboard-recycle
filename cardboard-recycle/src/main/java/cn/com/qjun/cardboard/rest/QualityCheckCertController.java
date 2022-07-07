@@ -16,16 +16,9 @@
 package cn.com.qjun.cardboard.rest;
 
 import cn.com.qjun.cardboard.utils.SerialNumberGenerator;
-import me.zhengjie.annotation.Log;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.annotations.*;
-
-import java.time.LocalDate;
 
 /**
 * @website https://el-admin.vip
@@ -39,12 +32,4 @@ import java.time.LocalDate;
 public class QualityCheckCertController {
 
     private final SerialNumberGenerator serialNumberGenerator;
-
-    @GetMapping("/genId")
-    @Log("生成质检单号")
-    @ApiOperation("生成质检单号")
-    @PreAuthorize("@el.check('stockOutOrder:add')")
-    public ResponseEntity<String> generateOrderId(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
-        return new ResponseEntity<>(serialNumberGenerator.generateQuantityCheckCertId(date), HttpStatus.OK);
-    }
 }

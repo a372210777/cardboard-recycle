@@ -18,12 +18,9 @@ package cn.com.qjun.cardboard.service;
 import cn.com.qjun.cardboard.domain.StockInOrder;
 import cn.com.qjun.cardboard.service.dto.StockInOrderDto;
 import cn.com.qjun.cardboard.service.dto.StockInOrderQueryCriteria;
-import cn.com.qjun.cardboard.service.dto.StockReportDto;
 import org.springframework.data.domain.Pageable;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.Map;
 import java.util.List;
 import java.io.IOException;
@@ -87,4 +84,6 @@ public interface StockInOrderService {
     void download(List<StockInOrderDto> all, HttpServletResponse response) throws IOException;
 
     List<Map<String, Object>> groupingStatistics(LocalDate beginDate, LocalDate endDate);
+
+    Map<String, Object> report(String reportType, StockInOrderQueryCriteria criteria, Integer pageNumber, Integer pageSize);
 }

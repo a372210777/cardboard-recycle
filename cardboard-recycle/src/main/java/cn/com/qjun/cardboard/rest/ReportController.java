@@ -13,11 +13,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import me.zhengjie.annotation.Log;
-import me.zhengjie.utils.DateUtil;
 import me.zhengjie.utils.FileUtil;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,13 +54,15 @@ public class ReportController {
     @Log("出入库统计")
     @ApiOperation("出入库统计")
     @PreAuthorize("@el.check('report:stock')")
-    public ResponseEntity<List<StockReportDto>> stockReport(@RequestParam(required = false) @ApiParam("仓库ID") Integer warehouseId,
+    public ResponseEntity<Map<String, Object>> stockReport(@RequestParam(required = false) @ApiParam("仓库ID") Integer warehouseId,
                                                             @RequestParam(required = false) @ApiParam("物料类别") String materialCategory,
                                                             @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
                                                             @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
                                                             @RequestParam(required = false) Integer materialId,
                                                             @RequestParam @ApiParam("订单类型：stockIn-入库 stockOut-出库") String orderType,
-                                                            @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType) {
+                                                            @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType,
+                                                            @RequestParam(defaultValue = "1") @ApiParam("页号") Integer pageNumber,
+                                                            @RequestParam(defaultValue = "20") @ApiParam("分页大小") Integer pageSize) {
         List<Timestamp> duration = Stream.of(Timestamp.valueOf(beginDate.atStartOfDay()), Timestamp.valueOf(endDate.plusDays(1).atStartOfDay().minusSeconds(1)))
                 .collect(Collectors.toList());
         if ("stockIn".equals(orderType)) {
@@ -72,79 +71,8 @@ public class ReportController {
             criteria.setMaterialCategory(materialCategory);
             criteria.setStockInTime(duration);
             criteria.setMaterialId(materialId);
-            List<StockInOrderDto> stockInOrderDtos = stockInOrderService.queryAll(criteria);
-            List<StockReportDto> tempResult = stockInOrderDtos.stream()
-                    .flatMap(order -> order.getOrderItems().stream()
-                            .filter(item -> (materialId == null || item.getMaterial().getId().equals(materialId))
-                                    && (StringUtils.isEmpty(materialCategory) || item.getMaterial().getCategory().equals(materialCategory)))
-                            .map(item -> {
-                                StockReportDto reportDto = new StockReportDto();
-                                reportDto.setOrderId(order.getId());
-                                reportDto.setItemId(item.getId());
-                                reportDto.setMaterialName(item.getMaterial().getName());
-                                reportDto.setMaterialCategory(item.getMaterial().getCategory());
-                                reportDto.setWarehouseName(order.getWarehouse().getName());
-                                reportDto.setQuantity(item.getQuantity());
-                                reportDto.setDate(DateUtil.DFY_MD.format(DateUtil.fromTimeStamp(order.getStockInTime().getTime() / 1000)));
-                                reportDto.setMoney(Optional.ofNullable(item.getUnitPrice())
-                                        .map(unitPrice -> unitPrice.multiply(BigDecimal.valueOf(item.getQuantity())))
-                                        .orElse(BigDecimal.ZERO));
-                                return reportDto;
-                            }))
-                    .collect(Collectors.toList());
-            if ("daily".equals(reportType)) {
-                Map<StockReportDto, List<StockReportDto>> dateGroupedQuantity = tempResult.stream()
-                        .collect(Collectors.groupingBy(report -> {
-                                    StockReportDto key = new StockReportDto();
-                                    key.setMaterialName(report.getMaterialName());
-                                    key.setMaterialCategory(report.getMaterialCategory());
-                                    key.setWarehouseName(report.getWarehouseName());
-                                    key.setDate(report.getDate());
-                                    return key;
-                                }));
-                List<StockReportDto> result = dateGroupedQuantity.entrySet().stream()
-                        .map(entry -> {
-                            StockReportDto reportDto = entry.getKey();
-                            reportDto.setOrderType("入库");
-                            reportDto.setQuantity(entry.getValue().stream()
-                                    .map(StockReportDto::getQuantity)
-                                    .mapToInt(quantity -> quantity).sum());
-                            reportDto.setMoney(entry.getValue().stream()
-                                    .map(StockReportDto::getMoney)
-                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
-                            return reportDto;
-                        })
-                        .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
-                        .collect(Collectors.toList());
-                return new ResponseEntity<>(result, HttpStatus.OK);
-            }
-            if ("summary".equals(reportType)) {
-                Map<StockReportDto, List<StockReportDto>> groupedQuantity = tempResult.stream()
-                        .collect(Collectors.groupingBy(report -> {
-                                    StockReportDto key = new StockReportDto();
-                                    key.setMaterialName(report.getMaterialName());
-                                    key.setMaterialCategory(report.getMaterialCategory());
-                                    key.setWarehouseName(report.getWarehouseName());
-                                    return key;
-                                }));
-                List<StockReportDto> result = groupedQuantity.entrySet().stream()
-                        .map(entry -> {
-                            StockReportDto reportDto = entry.getKey();
-                            reportDto.setOrderType("入库");
-                            reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate),
-                                    DateUtil.DFY_MD.format(endDate)));
-                            reportDto.setQuantity(entry.getValue().stream()
-                                    .map(StockReportDto::getQuantity)
-                                    .mapToInt(quantity -> quantity).sum());
-                            reportDto.setMoney(entry.getValue().stream()
-                                    .map(StockReportDto::getMoney)
-                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
-                            return reportDto;
-                        })
-                        .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
-                        .collect(Collectors.toList());
-                return new ResponseEntity<>(result, HttpStatus.OK);
-            }
+            Map<String,Object> pageResult = stockInOrderService.report(reportType, criteria, pageNumber, pageSize);
+            return new ResponseEntity<>(pageResult, HttpStatus.OK);
         }
         if ("stockOut".equals(orderType)) {
             StockOutOrderQueryCriteria criteria = new StockOutOrderQueryCriteria();
@@ -152,86 +80,8 @@ public class ReportController {
             criteria.setMaterialCategory(materialCategory);
             criteria.setStockOutTime(duration);
             criteria.setMaterialId(materialId);
-            List<StockOutOrderDto> stockInOrderDtos = stockOutOrderService.queryAll(criteria);
-            List<StockReportDto> tempResult = stockInOrderDtos.stream()
-                    .flatMap(order -> order.getOrderItems().stream()
-                            .filter(item -> (materialId == null || item.getMaterial().getId().equals(materialId))
-                                    && (StringUtils.isEmpty(materialCategory) || item.getMaterial().getCategory().equals(materialCategory)))
-                            .map(item -> {
-                                StockReportDto reportDto = new StockReportDto();
-                                reportDto.setOrderId(order.getId());
-                                reportDto.setItemId(item.getId());
-                                reportDto.setMaterialName(item.getMaterial().getName());
-                                reportDto.setMaterialCategory(item.getMaterial().getCategory());
-                                reportDto.setWarehouseName(order.getWarehouse().getName());
-                                reportDto.setQuantity(item.getQuantity());
-                                reportDto.setDate(DateUtil.DFY_MD.format(DateUtil.fromTimeStamp(order.getStockOutTime().getTime() / 1000)));
-                                BigDecimal money;
-                                if (item.getMaterial().getCategory().equals("paper")) {
-                                    double totalWeight = item.getQualityCheckCerts().stream()
-                                            .map(QualityCheckCertDto::getActualWeight)
-                                            .mapToDouble(w -> w).sum();
-                                    money = item.getUnitPrice().multiply(BigDecimal.valueOf(totalWeight));
-                                } else {
-                                    money = item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
-                                }
-                                reportDto.setMoney(money);
-                                return reportDto;
-                            }))
-                    .collect(Collectors.toList());
-            if ("daily".equals(reportType)) {
-                Map<StockReportDto, List<StockReportDto>> dateGroupedQuantity = tempResult.stream()
-                        .collect(Collectors.groupingBy(report -> {
-                                    StockReportDto key = new StockReportDto();
-                                    key.setMaterialName(report.getMaterialName());
-                                    key.setMaterialCategory(report.getMaterialCategory());
-                                    key.setWarehouseName(report.getWarehouseName());
-                                    key.setDate(report.getDate());
-                                    return key;
-                                }));
-                List<StockReportDto> result = dateGroupedQuantity.entrySet().stream()
-                        .map(entry -> {
-                            StockReportDto reportDto = entry.getKey();
-                            reportDto.setOrderType("出库");
-                            reportDto.setQuantity(entry.getValue().stream()
-                                    .map(StockReportDto::getQuantity)
-                                    .mapToInt(quantity -> quantity).sum());
-                            reportDto.setMoney(entry.getValue().stream()
-                                    .map(StockReportDto::getMoney)
-                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
-                            return reportDto;
-                        })
-                        .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
-                        .collect(Collectors.toList());
-                return new ResponseEntity<>(result, HttpStatus.OK);
-            }
-            if ("summary".equals(reportType)) {
-                Map<StockReportDto, List<StockReportDto>> groupedQuantity = tempResult.stream()
-                        .collect(Collectors.groupingBy(report -> {
-                                    StockReportDto key = new StockReportDto();
-                                    key.setMaterialName(report.getMaterialName());
-                                    key.setMaterialCategory(report.getMaterialCategory());
-                                    key.setWarehouseName(report.getWarehouseName());
-                                    return key;
-                                }));
-                List<StockReportDto> result = groupedQuantity.entrySet().stream()
-                        .map(entry -> {
-                            StockReportDto reportDto = entry.getKey();
-                            reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate),
-                                    DateUtil.DFY_MD.format(endDate)));
-                            reportDto.setOrderType("出库");
-                            reportDto.setQuantity(entry.getValue().stream()
-                                    .map(StockReportDto::getQuantity)
-                                    .mapToInt(quantity -> quantity).sum());
-                            reportDto.setMoney(entry.getValue().stream()
-                                    .map(StockReportDto::getMoney)
-                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
-                            return reportDto;
-                        })
-                        .sorted(Comparator.comparing(StockReportDto::getDate).reversed())
-                        .collect(Collectors.toList());
-                return new ResponseEntity<>(result, HttpStatus.OK);
-            }
+            Map<String,Object> pageResult = stockOutOrderService.report(reportType, criteria, pageNumber, pageSize);
+            return new ResponseEntity<>(pageResult, HttpStatus.OK);
         }
         throw new IllegalArgumentException("参数错误");
     }
@@ -249,18 +99,22 @@ public class ReportController {
                                   @RequestParam(required = false) Integer materialId,
                                   @RequestParam @ApiParam("订单类型：stockIn-入库 stockOut-出库") String orderType,
                                   @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType) throws IOException {
-        ResponseEntity<List<StockReportDto>> responseEntity = stockReport(warehouseId, materialCategory, beginDate, endDate, materialId, orderType, reportType);
+        int page = 1, pageSize = 100;
         List<Map<String, Object>> list = new ArrayList<>();
-        for (StockReportDto reportDto : Objects.requireNonNull(responseEntity.getBody())) {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("出入库", reportDto.getOrderType());
-            map.put("物料名称", reportDto.getMaterialName());
-            map.put("物料类别", reportDto.getMaterialCategory());
-            map.put("所属仓库", reportDto.getWarehouseName());
-            map.put("数量(Kg)", reportDto.getQuantity());
-            map.put("统计时间", reportDto.getDate());
-            map.put("金额", reportDto.getMoney());
-            list.add(map);
+        List temp;
+        while (!(temp = (List) stockReport(warehouseId, materialCategory, beginDate, endDate, materialId, orderType, reportType, page++, pageSize).getBody().get("content")).isEmpty()) {
+            for (Object o : temp) {
+                StockReportDto reportDto = (StockReportDto) o;
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("出入库", reportDto.getOrderType());
+                map.put("物料名称", reportDto.getMaterialName());
+                map.put("物料类别", reportDto.getMaterialCategory());
+                map.put("所属仓库", reportDto.getWarehouseName());
+                map.put("数量(Kg)", reportDto.getQuantity());
+                map.put("统计时间", reportDto.getDate());
+                map.put("金额", reportDto.getMoney());
+                list.add(map);
+            }
         }
         FileUtil.downloadExcel(list, response);
     }
@@ -269,54 +123,17 @@ public class ReportController {
     @Log("开销统计")
     @ApiOperation("开销统计")
     @PreAuthorize("@el.check('report:expense')")
-    public ResponseEntity<List<ExpenseReportDto>> expenseReport(@RequestParam(required = false) @ApiParam("开销种类") String category,
+    public ResponseEntity<Map<String,Object>> expenseReport(@RequestParam(required = false) @ApiParam("开销种类") String category,
                                                                 @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType,
                                                                 @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
-                                                                @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
+                                                                @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+                                                                @RequestParam(defaultValue = "1") @ApiParam("页号") Integer pageNumber,
+                                                                @RequestParam(defaultValue = "20") @ApiParam("分页大小") Integer pageSize) {
         DailyExpenseQueryCriteria criteria = new DailyExpenseQueryCriteria();
         criteria.setDates(Stream.of(Date.valueOf(beginDate), Date.valueOf(endDate)).collect(Collectors.toList()));
         criteria.setCategory(category);
-        List<DailyExpenseDto> dailyExpenseDtos = dailyExpenseService.queryAll(criteria);
-        if ("daily".equals(reportType)) {
-            Map<ExpenseReportDto, Double> grouped = dailyExpenseDtos.stream()
-                    .collect(Collectors.groupingBy(dto -> {
-                                ExpenseReportDto reportDto = new ExpenseReportDto();
-                                reportDto.setCategory(dto.getCategory());
-                                reportDto.setDate(DateUtil.DFY_MD.format(dto.getDate().toLocalDate()));
-                                return reportDto;
-                            },
-                            Collectors.mapping(DailyExpenseDto::getMoney,
-                                    Collectors.summingDouble(BigDecimal::doubleValue))));
-            List<ExpenseReportDto> result = grouped.entrySet().stream()
-                    .map(entry -> {
-                        ExpenseReportDto reportDto = entry.getKey();
-                        reportDto.setMoney(BigDecimal.valueOf(entry.getValue()));
-                        return reportDto;
-                    })
-                    .collect(Collectors.toList());
-            return new ResponseEntity<>(result, HttpStatus.OK);
-        }
-        if ("summary".equals(reportType)) {
-            Map<ExpenseReportDto, Double> grouped = dailyExpenseDtos.stream()
-                    .collect(Collectors.groupingBy(dto -> {
-                                ExpenseReportDto reportDto = new ExpenseReportDto();
-                                reportDto.setCategory(dto.getCategory());
-                                return reportDto;
-                            },
-                            Collectors.mapping(DailyExpenseDto::getMoney,
-                                    Collectors.summingDouble(BigDecimal::doubleValue))));
-            List<ExpenseReportDto> result = grouped.entrySet().stream()
-                    .map(entry -> {
-                        ExpenseReportDto reportDto = entry.getKey();
-                        reportDto.setDate(String.format("%s ~ %s", DateUtil.DFY_MD.format(beginDate),
-                                DateUtil.DFY_MD.format(endDate)));
-                        reportDto.setMoney(BigDecimal.valueOf(entry.getValue()));
-                        return reportDto;
-                    })
-                    .collect(Collectors.toList());
-            return new ResponseEntity<>(result, HttpStatus.OK);
-        }
-        throw new IllegalArgumentException("参数错误");
+        Map<String,Object> pageResult = dailyExpenseService.report(reportType, criteria, pageNumber, pageSize);
+        return new ResponseEntity<>(pageResult, HttpStatus.OK);
     }
 
     @Log("开销统计导出")
@@ -328,14 +145,18 @@ public class ReportController {
                                     @RequestParam @ApiParam("统计方式：daily-按天 summary-汇总") String reportType,
                                     @RequestParam @ApiParam(value = "统计开始日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate beginDate,
                                     @RequestParam @ApiParam(value = "统计结束日期", required = true) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) throws IOException {
-        ResponseEntity<List<ExpenseReportDto>> responseEntity = expenseReport(category, reportType, beginDate, endDate);
+        int page = 1, pageSize = 100;
         List<Map<String, Object>> list = new ArrayList<>();
-        for (ExpenseReportDto reportDto : Objects.requireNonNull(responseEntity.getBody())) {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("开销分类", reportDto.getCategory());
-            map.put("总金额", reportDto.getMoney());
-            map.put("统计日期", reportDto.getDate());
-            list.add(map);
+        List temp;
+        while (!(temp = (List) expenseReport(category, reportType, beginDate, endDate, page++, pageSize).getBody().get("content")).isEmpty()) {
+            for (Object o : temp) {
+                ExpenseReportDto reportDto = (ExpenseReportDto) o;
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("开销分类", reportDto.getCategory());
+                map.put("总金额", reportDto.getMoney());
+                map.put("统计日期", reportDto.getDate());
+                list.add(map);
+            }
         }
         FileUtil.downloadExcel(list, response);
     }

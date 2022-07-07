@@ -86,4 +86,6 @@ public interface StockOutOrderService {
     List<Map<String, Object>> groupingStatistics(LocalDate beginDate, LocalDate endDate);
 
     List<Map<String, Object>> groupingStatisticsMoney(LocalDate beginDate, LocalDate endDate);
+
+    Map<String, Object> report(String reportType, StockOutOrderQueryCriteria criteria, Integer pageNumber, Integer pageSize);
 }
