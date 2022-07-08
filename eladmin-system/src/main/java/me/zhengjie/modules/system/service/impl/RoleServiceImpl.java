@@ -16,7 +16,9 @@
 package me.zhengjie.modules.system.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.alibaba.fastjson.JSON;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import me.zhengjie.exception.BadRequestException;
 import me.zhengjie.modules.security.service.UserCacheManager;
 import me.zhengjie.modules.security.service.dto.AuthorityDto;
@@ -50,6 +52,7 @@ import java.util.stream.Collectors;
  * @author Zheng Jie
  * @date 2018-12-03
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "role")
@@ -165,6 +168,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Cacheable(key = "'auth:' + #p0.id")
     public List<AuthorityDto> mapToGrantedAuthorities(UserDto user) {
+        log.info("userDto ----- {}", JSON.toJSONString(user));
         Set<String> permissions = new HashSet<>();
         // 如果是管理员直接返回
         if (user.getIsAdmin()) {

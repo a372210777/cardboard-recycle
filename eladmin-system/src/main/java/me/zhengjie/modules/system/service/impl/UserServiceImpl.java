@@ -15,7 +15,9 @@
  */
 package me.zhengjie.modules.system.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import me.zhengjie.config.FileProperties;
 import me.zhengjie.exception.BadRequestException;
 import me.zhengjie.modules.security.service.OnlineUserService;
@@ -47,6 +49,7 @@ import java.util.stream.Collectors;
  * @author Zheng Jie
  * @date 2018-11-23
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "user")
@@ -177,6 +180,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserLoginDto getLoginData(String userName) {
         User user = userRepository.findByUsername(userName);
+        log.info("user ----- {}", JSON.toJSONString(user));
         if (user == null) {
             throw new EntityNotFoundException(User.class, "name", userName);
         } else {
