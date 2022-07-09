@@ -138,8 +138,8 @@ public class DailyExpenseServiceImpl implements DailyExpenseService {
         StringBuilder group = new StringBuilder("group by category");
         StringBuilder order = new StringBuilder("order by category");
         if ("daily".equals(reportType)) {
-            group.insert(9, "date_, ");
-            order.insert(9, "date_, ");
+            group.insert(9, "date_ desc, ");
+            order.insert(9, "date_ desc, ");
         }
         String countSql = String.format("select count(*) from (%s) t", String.join(" ", resultSelect, from, where.toString(), group.toString()));
         Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray());

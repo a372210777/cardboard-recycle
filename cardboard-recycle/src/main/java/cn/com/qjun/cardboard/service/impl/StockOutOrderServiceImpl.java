@@ -174,8 +174,8 @@ public class StockOutOrderServiceImpl implements StockOutOrderService {
         StringBuilder group = new StringBuilder("group by w.id, m.id");
         StringBuilder order = new StringBuilder("order by w.id, m.id");
         if ("daily".equals(reportType)) {
-            group.insert(9, "date(o.stock_out_time), ");
-            order.insert(9, "date(o.stock_out_time), ");
+            group.insert(9, "date(o.stock_out_time) desc, ");
+            order.insert(9, "date(o.stock_out_time) desc, ");
         }
         String countSql = String.format("select count(*) from (%s) t", String.join(" ", resultSelect, from, where.toString(), group.toString()));
         Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray());

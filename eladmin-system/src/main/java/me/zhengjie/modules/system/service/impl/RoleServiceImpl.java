@@ -168,7 +168,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Cacheable(key = "'auth:' + #p0.id")
     public List<AuthorityDto> mapToGrantedAuthorities(UserDto user) {
-        log.info("userDto ----- {}", JSON.toJSONString(user));
+        System.out.println("userDto ----- " + JSON.toJSONString(user));
         Set<String> permissions = new HashSet<>();
         // 如果是管理员直接返回
         if (user.getIsAdmin()) {
